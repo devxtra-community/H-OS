@@ -1,14 +1,19 @@
-import { createLogger, format, transports } from 'winston';
+import winston from 'winston';
 
-const logger = createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: format.combine(
-    format.timestamp(),
-    format.errors({ stack: true }),
-    format.printf(({ timestamp, level, message, stack }) => {
-      return `${timestamp} [${level.toUpperCase()}] ${stack || message}`;
-    })
-  ),
-  transports: [new transports.Console()],
+const { combine, timestamp, errors, printf, colorize } = winston.format;
+
+const logFormat = printf(({ level, message, timestamp, stack, service }) => {
+  return `${timestamp} [${service ?? 'app'}] ${level}: ${stack || message}`;
 });
-export default logger;
+
+const baseLogger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: combine(errors({ stack: true }), timestamp(), logFormat),
+  transports: [
+    new winston.transports.Console({
+      format: combine(colorize(), logFormat),
+    }),
+  ],
+});
+
+export default baseLogger;
