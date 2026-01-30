@@ -59,3 +59,5 @@ Reason:
 - Staff Service → PostgreSQL + Redis
 - Notification Service → MongoDB
 - API Gateway → No database
+
+i did register
