@@ -1,7 +1,7 @@
 import baseLogger from '../../shared/src/logger';
 
 const logger = baseLogger.child({
-  service: 'api-gateway',
+  service: 'patient-service',
 });
 
 export default logger;
