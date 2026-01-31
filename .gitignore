@@ -1,13 +1,24 @@
-# dependencies
+# Dependencies
 node_modules/
+node_modules/.prisma/
 
-# logs
+# Logs
 npm-debug.log*
 pnpm-debug.log*
+*.log
 
-# env
+# Environment variables
 .env
-.env.local
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Editor
+.vscode/
 
 # OS
 .DS_Store
+Thumbs.db

@@ -1,5 +1,5 @@
 {
-  "name": "patient-service",
+  "name": "@h-os/patient-service",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,7 +13,9 @@
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
-    "express": "^5.2.1"
+    "@prisma/client": "^7.3.0",
+    "express": "^5.2.1",
+    "prisma": "^7.3.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
