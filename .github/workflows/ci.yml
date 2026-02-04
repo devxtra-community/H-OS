@@ -19,8 +19,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install pnpm
+      - name: Install pnpm globally
         run: npm install -g pnpm@9
+
+      - name: Verify pnpm
+        run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
