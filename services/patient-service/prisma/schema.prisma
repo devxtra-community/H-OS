@@ -1,3 +1,4 @@
+// services/patient-service/prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,11 +9,16 @@ datasource db {
 
 model Patient {
   id        String   @id @default(uuid())
-  firstName String
-  lastName  String
+  name      String
   email     String   @unique
+  dob       DateTime
+  gender    String
   phone     String?
-  dob       DateTime?
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([isActive])
+  @@index([createdAt])
 }
