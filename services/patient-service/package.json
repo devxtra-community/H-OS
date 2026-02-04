@@ -1,19 +1,11 @@
 {
   "name": "@h-os/patient-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "build": "pnpm prisma:generate && tsc",
-    "prisma:generate": "prisma generate"
+    "build": "prisma generate && tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "@prisma/client": "^7.3.0",
     "express": "^5.2.1",
