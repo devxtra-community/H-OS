@@ -11,28 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install pnpm globally
-        run: npm install -g pnpm@9
+      - run: npm install -g pnpm@9
 
-      - name: Verify pnpm
-        run: pnpm --version
+      - run: pnpm --version
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - run: pnpm lint
 
-      - name: Type check
-        run: pnpm typecheck
+      - run: pnpm typecheck
 
-      - name: Build all services
-        run: pnpm build
+      - run: pnpm build
