@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-router.post('/', createPatient);
+router.post('/create', createPatient);
 router.get('/:id', getPatient);
 router.patch('/:id', updatePatient);
 router.delete('/:id', deactivatePatient);
