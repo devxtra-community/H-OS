@@ -5,8 +5,14 @@ import { error } from 'node:console';
 export interface AuthenticatedRequest extends Request {
   user?: {
     sub: string;
-    role: string;
-    type: 'PATIENT' | 'STAFF';
+    type: 'PATIENT' | 'STAFF' | 'ADMIN';
+
+    // present for STAFF / PATIENT
+    role?: string;
+
+    // present for STAFF
+    job_title?: 'HEAD_STAFF' | 'STAFF';
+    department?: string;
   };
 }
 

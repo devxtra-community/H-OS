@@ -48,7 +48,7 @@ Reason:
 
 | Purpose       | Technology | Library     |
 | ------------- | ---------- | ----------- |
-| PostgreSQL    | SQL        | pg + Prisma |
+| PostgreSQL    | SQL        | pg          |
 | MongoDB       | NoSQL      | mongoose    |
 | Redis         | Cache      | ioredis     |
 | Message Queue | RabbitMQ   | amqplib     |
