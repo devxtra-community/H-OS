@@ -1,11 +1,11 @@
-// services/patient-service/src/modules/patients/patient.types.ts
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
 export interface CreatePatientDTO {
-  name: string;
   email: string;
+  password: string;
+  name: string;
   dob: string;
-  gender: Gender;
+  gender: string;
   phone?: string;
 }
 

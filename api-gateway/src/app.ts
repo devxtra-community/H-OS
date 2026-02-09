@@ -1,27 +1,22 @@
 import express from 'express';
-import healthRouter from './routes/health';
-import { patientProxy } from './proxy/patient.proxy';
+import cors from 'cors';
+import healthRoutes from './routes/health';
+import { patientAuthProxy } from './proxy/patient.auth.proxy';
+import { patientDataProxy } from './proxy/patient.data.proxy';
+import { authenticate } from './middlewares/auth.middleware';
+import { requirePatientSelf } from './middlewares/patient.guard';
 
 const app = express();
 
-// Debug middleware
-app.use((req, res, next) => {
-  console.log(' GATEWAY REQUEST:', req.method, req.originalUrl);
-  next();
-});
+app.use(cors());
 
-app.use('/health', healthRouter);
-app.use('/patients', patientProxy);
+// health
+app.use('/health', healthRoutes);
 
-// ✅ FIXED catch-all route
-app.use((req, res) => {
-  console.log(' NO ROUTE MATCHED:', req.method, req.originalUrl);
-  res.status(404).json({
-    error: 'Route not found in gateway',
-    method: req.method,
-    url: req.originalUrl,
-    timestamp: new Date().toISOString(),
-  });
-});
+// 🔓 PUBLIC auth (NO JWT)
+app.use('/patients/public', patientAuthProxy);
+
+// 🔐 PROTECTED patient data
+app.use('/patients', authenticate, requirePatientSelf, patientDataProxy);
 
 export default app;

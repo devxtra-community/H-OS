@@ -1,65 +1,83 @@
 // services/patient-service/src/modules/patients/patient.controller.ts
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { patientService } from './patient.service';
 import { CreatePatientDTO, UpdatePatientDTO } from './patient.types';
 
-type PatientParams = {
-  id: string;
-};
+class PatientController {
+  /**
+   * GET /patients/:id
+   * Get patient by ID (trusts JWT from gateway)
+   */
+  async getPatientById(req: Request, res: Response) {
+    try {
+      const id = Array.isArray(req.params.id)
+        ? req.params.id[0]
+        : req.params.id;
 
-export const createPatient = async (
-  req: Request<{}, {}, CreatePatientDTO>,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const patient = await patientService.createPatient(req.body);
-    res.status(201).json(patient);
-  } catch (err) {
-    next(err);
-  }
-};
+      if (!id) {
+        return res.status(400).json({ error: 'Patient ID is required' });
+      }
 
-export const getPatient = async (
-  req: Request<PatientParams>,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const patient = await patientService.getPatientById(req.params.id);
+      const patient = await patientService.getPatientById(id);
 
-    if (!patient) {
-      return res.status(404).json({ message: 'Patient not found' });
+      if (!patient) {
+        return res.status(404).json({ error: 'Patient not found' });
+      }
+
+      return res.status(200).json(patient);
+    } catch (error) {
+      console.error('Get patient error:', error);
+      return res.status(500).json({ error: 'Failed to fetch patient' });
     }
-
-    res.json(patient);
-  } catch (err) {
-    next(err);
   }
-};
 
-export const updatePatient = async (
-  req: Request<PatientParams, {}, UpdatePatientDTO>,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const patient = await patientService.updatePatient(req.params.id, req.body);
-    res.json(patient);
-  } catch (err) {
-    next(err);
-  }
-};
+  /**
+   * PUT /patients/:id
+   * Update patient information
+   */
+  async updatePatient(req: Request, res: Response) {
+    try {
+      const id = Array.isArray(req.params.id)
+        ? req.params.id[0]
+        : req.params.id;
 
-export const deactivatePatient = async (
-  req: Request<PatientParams>,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    await patientService.deactivatePatient(req.params.id);
-    res.status(204).send();
-  } catch (err) {
-    next(err);
+      if (!id) {
+        return res.status(400).json({ error: 'Patient ID is required' });
+      }
+
+      const data: UpdatePatientDTO = req.body;
+
+      const patient = await patientService.updatePatient(id, data);
+
+      return res.status(200).json(patient);
+    } catch (error) {
+      console.error('Update patient error:', error);
+      return res.status(500).json({ error: 'Failed to update patient' });
+    }
   }
-};
+
+  /**
+   * DELETE /patients/:id
+   * Soft delete (deactivate) patient
+   */
+  async deactivatePatient(req: Request, res: Response) {
+    try {
+      const id = Array.isArray(req.params.id)
+        ? req.params.id[0]
+        : req.params.id;
+
+      if (!id) {
+        return res.status(400).json({ error: 'Patient ID is required' });
+      }
+
+      await patientService.deactivatePatient(id);
+
+      return res.status(204).send();
+    } catch (error) {
+      console.error('Deactivate patient error:', error);
+      return res.status(500).json({ error: 'Failed to deactivate patient' });
+    }
+  }
+}
+
+export const patientController = new PatientController();

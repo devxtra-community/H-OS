@@ -1,18 +1,15 @@
-// patient.routes.ts
-
+// services/patient-service/src/modules/patients/patient.routes.ts
 import { Router } from 'express';
-import {
-  createPatient,
-  getPatient,
-  updatePatient,
-  deactivatePatient,
-} from './patient.controller.js';
+import { patientController } from './patient.controller';
 
 const router = Router();
 
-router.post('/create', createPatient);
-router.get('/:id', getPatient);
-router.patch('/:id', updatePatient);
-router.delete('/:id', deactivatePatient);
+router.get('/:id', (req, res) => patientController.getPatientById(req, res));
+
+router.put('/:id', (req, res) => patientController.updatePatient(req, res));
+
+router.delete('/:id', (req, res) =>
+  patientController.deactivatePatient(req, res)
+);
 
 export default router;
