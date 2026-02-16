@@ -16,4 +16,6 @@ router.post('/login', staffController.login.bind(staffController));
 // Refresh (staff only)
 router.post('/refresh', staffController.refresh.bind(staffController));
 
+router.get('/me', staffController.me.bind(staffController));
+
 export default router;

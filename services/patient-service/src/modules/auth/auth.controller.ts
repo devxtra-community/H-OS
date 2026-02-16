@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { patientService } from '../patients/patient.service';
+import jwt from 'jsonwebtoken';
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -14,8 +15,21 @@ export class AuthController {
   async login(req: Request, res: Response) {
     try {
       const { email, password } = req.body;
+      console.log(req.body);
       const result = await patientService.loginPatient(email, password);
-      return res.status(200).json(result);
+
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json({
+        accessToken: result.accessToken,
+        patient: result.user,
+      });
     } catch {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -23,11 +37,61 @@ export class AuthController {
 
   async refresh(req: Request, res: Response) {
     try {
-      const { refreshToken } = req.body;
+      console.log('Refresh endpoint hit');
+      console.log('cookies recieved ', req.cookies);
+
+      const refreshToken = req.cookies.refreshToken;
+      if (!refreshToken) {
+        return res.status(401).json({ error: 'No refresh token' });
+      }
+
       const tokens = await patientService.refreshTokens(refreshToken);
-      return res.status(200).json(tokens);
+
+      res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json({
+        accessToken: tokens.accessToken,
+        userId: tokens.userId,
+      });
     } catch {
       return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+  }
+
+  async me(req: Request, res: Response) {
+    try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const token = authHeader.split(' ')[1];
+
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
+
+      const patient = await patientService.getPatientById(payload.sub);
+
+      if (!patient) {
+        return res.status(404).json({ error: 'Patient not found' });
+      }
+
+      return res.status(200).json({
+        id: patient.id,
+        email: patient.email,
+        name: patient.name,
+        role: patient.role,
+      });
+    } catch {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
   }
 }

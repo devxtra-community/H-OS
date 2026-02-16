@@ -5,6 +5,8 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+console.log('🔥 REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET);
+
 /**
  * ---- JWT CONFIG (typed to avoid TS overload issues)
  */
@@ -36,8 +38,11 @@ class PatientService {
     }
 
     const id = randomUUID();
+    console.log('Raw pass : ', data.password);
+
     const passwordHash = await bcrypt.hash(String(data.password).trim(), 10);
 
+    console.log('hashed pass : ', passwordHash);
     const result = await pool.query(
       `
       INSERT INTO patients
@@ -77,13 +82,19 @@ class PatientService {
     const patient = result.rows[0];
     if (!patient) throw new Error('Invalid credentials');
 
+    console.log('Login email : ', email);
+    console.log('raw pass :', password);
+    console.log('db hashed pass : ', patient.password_hash);
     const passwordOk = await bcrypt.compare(
       String(password).trim(),
       patient.password_hash
     );
 
+    console.log('bcrypt match :', passwordOk);
+
     if (!passwordOk) throw new Error('Invalid credentials');
 
+    console.log('bcrypt passed');
     /**
      * 🔐 ACCESS TOKEN
      */
@@ -97,6 +108,7 @@ class PatientService {
       { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
     );
 
+    console.log('access token created');
     /**
      * 🔁 REFRESH TOKEN
      */
@@ -108,6 +120,8 @@ class PatientService {
       process.env.REFRESH_TOKEN_SECRET!,
       { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
     );
+
+    console.log('refresh token created');
 
     /**
      * 💾 STORE HASHED REFRESH TOKEN
@@ -122,11 +136,14 @@ class PatientService {
       [randomUUID(), patient.id, hashToken(refreshToken)]
     );
 
+    console.log('refresh token saved');
+
     return {
       accessToken,
       refreshToken,
       user: {
         id: patient.id,
+        name: patient.name,
         email: patient.email,
         role: patient.role,
       },
@@ -137,78 +154,101 @@ class PatientService {
    * REFRESH TOKENS (ROTATION ENABLED)
    */
   async refreshTokens(refreshToken: string) {
-    const payload = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET!
-    ) as { sub: string; type: string };
+    console.log('🔁 refreshTokens called');
+    console.log('🔁 Incoming refreshToken:', refreshToken);
 
-    if (payload.type !== 'REFRESH') {
-      throw new Error('Invalid token type');
-    }
+    try {
+      const payload = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET!
+      ) as { sub: string; type: string };
 
-    const tokenHash = hashToken(refreshToken);
+      if (payload.type !== 'REFRESH') {
+        console.log('❌ Token type mismatch');
+        throw new Error('Invalid token type');
+      }
 
-    const result = await pool.query(
-      `
+      const tokenHash = hashToken(refreshToken);
+
+      const result = await pool.query(
+        `
       SELECT id, patient_id, revoked, expires_at
       FROM patient_refresh_tokens
       WHERE token_hash = $1
       `,
-      [tokenHash]
-    );
+        [tokenHash]
+      );
 
-    const stored = result.rows[0];
-    if (!stored || stored.revoked || stored.expires_at < new Date()) {
-      throw new Error('Refresh token invalid');
-    }
+      const stored = result.rows[0];
 
-    /**
-     * 🔄 ROTATE: revoke old refresh token
-     */
-    await pool.query(
-      `UPDATE patient_refresh_tokens SET revoked = true WHERE id = $1`,
-      [stored.id]
-    );
+      if (!stored) {
+        console.log('❌ No token found in DB');
+        throw new Error('Refresh token not found');
+      }
 
-    /**
-     * 🔐 NEW ACCESS TOKEN
-     */
-    const newAccessToken = jwt.sign(
-      {
-        sub: stored.patient_id,
-        role: 'PATIENT',
-        type: 'PATIENT',
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
-    );
+      console.log('🔁 Stored token row:', stored);
 
-    /**
-     * 🔁 NEW REFRESH TOKEN
-     */
-    const newRefreshToken = jwt.sign(
-      {
-        sub: stored.patient_id,
-        type: 'REFRESH',
-      },
-      process.env.REFRESH_TOKEN_SECRET!,
-      { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
-    );
+      if (stored.revoked) {
+        console.log('❌ Token is revoked');
+        throw new Error('Refresh token revoked');
+      }
 
-    await pool.query(
-      `
+      const expiresAt = new Date(stored.expires_at);
+      console.log('🔁 Expires at:', expiresAt);
+      console.log('🔁 Now:', new Date());
+
+      if (expiresAt.getTime() < Date.now()) {
+        console.log('❌ Token expired');
+        throw new Error('Refresh token expired');
+      }
+
+      console.log('✅ Refresh token valid, rotating');
+
+      await pool.query(
+        `UPDATE patient_refresh_tokens SET revoked = true WHERE id = $1`,
+        [stored.id]
+      );
+
+      const newAccessToken = jwt.sign(
+        {
+          sub: stored.patient_id,
+          role: 'PATIENT',
+          type: 'PATIENT',
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
+      );
+
+      const newRefreshToken = jwt.sign(
+        {
+          sub: stored.patient_id,
+          type: 'REFRESH',
+        },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+      );
+
+      await pool.query(
+        `
       INSERT INTO patient_refresh_tokens
         (id, patient_id, token_hash, expires_at)
       VALUES
         ($1, $2, $3, now() + interval '7 days')
       `,
-      [randomUUID(), stored.patient_id, hashToken(newRefreshToken)]
-    );
+        [randomUUID(), stored.patient_id, hashToken(newRefreshToken)]
+      );
 
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    };
+      console.log('✅ New tokens issued');
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        userId: stored.patient_id,
+      };
+    } catch (err) {
+      console.log('❌ Refresh error:', err);
+      throw err;
+    }
   }
 
   /**
