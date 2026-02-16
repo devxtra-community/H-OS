@@ -5,9 +5,10 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { pool } from '../../db';
 import { randomUUID } from 'crypto';
+import { error } from 'console';
 
 /**
- * ---- JWT CONFIG (typed to avoid TS overload issues)
+ * ---- JWT CONFIG
  */
 const ACCESS_TOKEN_EXPIRES_IN = process.env
   .ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
@@ -87,9 +88,19 @@ export class StaffAuthController {
         [randomUUID(), staff.id, hashToken(refreshToken)]
       );
 
+      /**
+       * 🍪 SET REFRESH TOKEN COOKIE
+       */
+      res.cookie('staffRefreshToken', refreshToken, {
+        httpOnly: true,
+        secure: false, // true in prod
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       return res.status(200).json({
         accessToken,
-        refreshToken,
         staff: {
           id: staff.id,
           name: staff.name,
@@ -107,12 +118,12 @@ export class StaffAuthController {
 
   async refresh(req: Request, res: Response) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies.staffRefreshToken;
+      if (!refreshToken) {
+        return res.status(401).json({ error: 'No refresh token' });
+      }
 
-      const payload = jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET!
-      ) as { sub: string };
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
 
       const tokenHash = hashToken(refreshToken);
 
@@ -126,12 +137,21 @@ export class StaffAuthController {
       );
 
       const stored = result.rows[0];
-      if (!stored || stored.revoked || stored.expires_at < new Date()) {
+      if (!stored) {
         return res.status(401).json({ error: 'Invalid refresh token' });
       }
 
+      if (stored.revoked) {
+        return res.status(401).json({ error: 'Refresh token revoked' });
+      }
+
+      const expiresAt = new Date(stored.expires_at);
+      if (expiresAt.getTime() < Date.now()) {
+        return res.status(401).json({ error: 'Refresh token expired' });
+      }
+
       /**
-       * 🔄 ROTATE: revoke old refresh token
+       * 🔄 REVOKE OLD TOKEN
        */
       await pool.query(
         `UPDATE staff_refresh_tokens SET revoked = true WHERE id = $1`,
@@ -172,13 +192,57 @@ export class StaffAuthController {
         [randomUUID(), stored.staff_id, hashToken(newRefreshToken)]
       );
 
+      /**
+       * 🍪 ROTATE COOKIE
+       */
+      res.cookie('staffRefreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: false, // true in prod
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       return res.status(200).json({
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
       });
     } catch (err) {
       console.error('STAFF REFRESH ERROR:', err);
       return res.status(401).json({ error: 'Refresh failed' });
+    }
+  }
+
+  async me(req: Request, res: Response) {
+    try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const token = authHeader.split(' ')[1];
+
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+        type: string;
+      };
+
+      if (payload.type !== 'STAFF' && payload.type !== 'ADMIN') {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const result = await pool.query(
+        `
+      SELECT id, name, email, department, role, job_title
+      FROM staff
+      WHERE id = $1
+      `,
+        [payload.sub]
+      );
+
+      return res.status(200).json(result.rows[0]);
+    } catch {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
   }
 }

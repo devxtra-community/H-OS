@@ -5,11 +5,14 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../../db';
 
 /**
- * ---- JWT CONFIG (typed to avoid TS overload issues)
+ * ---- JWT CONFIG
  */
 const ACCESS_TOKEN_EXPIRES_IN =
   (process.env.ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
   '15m';
+
+const REFRESH_TOKEN_EXPIRES_IN = process.env
+  .REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
 
 export class AdminAuthController {
   async login(req: Request, res: Response) {
@@ -36,6 +39,9 @@ export class AdminAuthController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      /**
+       * 🔐 ACCESS TOKEN
+       */
       const accessToken = jwt.sign(
         {
           sub: admin.id,
@@ -44,6 +50,26 @@ export class AdminAuthController {
         process.env.JWT_SECRET!,
         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
       );
+
+      /**
+       * 🔁 REFRESH TOKEN (COOKIE)
+       */
+      const refreshToken = jwt.sign(
+        {
+          sub: admin.id,
+          type: 'REFRESH',
+        },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+      );
+
+      res.cookie('staffRefreshToken', refreshToken, {
+        httpOnly: true,
+        secure: false, // true in prod
+        sameSite: 'lax',
+        path: '/staff/public/auth/refresh',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
       return res.status(200).json({ accessToken });
     } catch (err) {
