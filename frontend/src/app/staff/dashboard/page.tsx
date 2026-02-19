@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function StaffDashboardPage() {
-  const { auth } = useStaffAuth();
+  const { auth, logout } = useStaffAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -14,18 +14,29 @@ export default function StaffDashboardPage() {
     }
   }, [auth.accessToken, auth.isRestoring, router]);
 
-if (auth.isRestoring) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-    </div>
-  );
-}
+  if (auth.isRestoring) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    );
+  }
 
   if (!auth.accessToken) return null;
 
   return (
     <div className="min-h-screen p-8 bg-gray-50">
+      
+      {/* 🔥 LOGOUT BUTTON */}
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={logout}
+          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+        >
+          Logout
+        </button>
+      </div>
+
       <h1 className="text-2xl font-semibold mb-6">
         Staff Dashboard
       </h1>

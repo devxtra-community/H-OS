@@ -71,30 +71,37 @@ class PatientService {
   async loginPatient(email: string, password: string) {
     const result = await pool.query(
       `
-      SELECT id, email, password_hash, role
-      FROM patients
-      WHERE email = $1 AND is_active = true
-      LIMIT 1
-      `,
+    SELECT id, name, email, password_hash, role
+    FROM patients
+    WHERE email = $1 AND is_active = true
+    LIMIT 1
+    `,
       [email]
     );
 
     const patient = result.rows[0];
     if (!patient) throw new Error('Invalid credentials');
 
-    console.log('Login email : ', email);
-    console.log('raw pass :', password);
-    console.log('db hashed pass : ', patient.password_hash);
     const passwordOk = await bcrypt.compare(
       String(password).trim(),
       patient.password_hash
     );
 
-    console.log('bcrypt match :', passwordOk);
-
     if (!passwordOk) throw new Error('Invalid credentials');
 
-    console.log('bcrypt passed');
+    /**
+     * 🔥 REVOKE ALL OLD REFRESH TOKENS
+     * (Prevents multiple active sessions)
+     */
+    await pool.query(
+      `
+    UPDATE patient_refresh_tokens
+    SET revoked = true
+    WHERE patient_id = $1
+    `,
+      [patient.id]
+    );
+
     /**
      * 🔐 ACCESS TOKEN
      */
@@ -108,7 +115,6 @@ class PatientService {
       { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
     );
 
-    console.log('access token created');
     /**
      * 🔁 REFRESH TOKEN
      */
@@ -121,22 +127,18 @@ class PatientService {
       { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
     );
 
-    console.log('refresh token created');
-
     /**
      * 💾 STORE HASHED REFRESH TOKEN
      */
     await pool.query(
       `
-      INSERT INTO patient_refresh_tokens
-        (id, patient_id, token_hash, expires_at)
-      VALUES
-        ($1, $2, $3, now() + interval '7 days')
-      `,
+    INSERT INTO patient_refresh_tokens
+      (id, patient_id, token_hash, expires_at, revoked)
+    VALUES
+      ($1, $2, $3, now() + interval '7 days', false)
+    `,
       [randomUUID(), patient.id, hashToken(refreshToken)]
     );
-
-    console.log('refresh token saved');
 
     return {
       accessToken,

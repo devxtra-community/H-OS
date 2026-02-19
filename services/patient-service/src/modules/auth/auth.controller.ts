@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { patientService } from '../patients/patient.service';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { Pool } from 'pg';
+import { pool } from '../../db';
+import { log } from 'console';
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -92,6 +96,52 @@ export class AuthController {
       });
     } catch {
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+
+  async logout(req: Request, res: Response) {
+    try {
+      console.log('logout cookies', req.cookies);
+
+      console.log('LOGOUT ROUTE HIT');
+
+      const refreshToken = req.cookies.refreshToken;
+
+      if (refreshToken) {
+        const tokenHash = crypto
+          .createHash('sha256')
+          .update(refreshToken)
+          .digest('hex');
+
+        // Find the token row
+        const result = await pool.query(
+          `SELECT patient_id FROM patient_refresh_tokens WHERE token_hash = $1`,
+          [tokenHash]
+        );
+
+        const row = result.rows[0];
+
+        if (row) {
+          // 🔥 Revoke ALL refresh tokens for that patient
+          await pool.query(
+            `UPDATE patient_refresh_tokens
+           SET revoked = true
+           WHERE patient_id = $1`,
+            [row.patient_id]
+          );
+        }
+      }
+
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+
+      return res.status(200).json({ message: 'Logged out' });
+    } catch {
+      return res.status(500).json({ error: 'Logout failed' });
     }
   }
 }

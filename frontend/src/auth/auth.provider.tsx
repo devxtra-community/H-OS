@@ -11,6 +11,7 @@ import {
 import { Patient } from './auth.types';
 import { refreshPatient } from './auth.service';
 import { api } from '../lib/api';
+import { logoutPatient } from './auth.service';
 
 type AuthState = {
   accessToken: string | null;
@@ -109,48 +110,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 🔁 Restore session on page load
 // 🔁 Restore session ONLY if no accessToken
+// 🔁 Restore session ONCE on mount
 useEffect(() => {
-  if (auth.accessToken) {
-    setAuth(prev => ({ ...prev, isRestoring: false }));
-    return;
-  }
-
   let cancelled = false;
 
-async function restoreSession() {
-  try {
-    const refreshRes = await refreshPatient();
+  (async () => {
+    try {
+      const refreshRes = await refreshPatient();
 
-    accessTokenRef.current = refreshRes.accessToken;
+      accessTokenRef.current = refreshRes.accessToken;
 
-    const profileRes = await api.get('/patients/public/auth/me');
+      const profileRes = await api.get('/patients/public/auth/me');
 
-    if (cancelled) return;
+      if (cancelled) return;
 
-    setAuth({
-      accessToken: refreshRes.accessToken,
-      patient: profileRes.data,
-      isRestoring: false,
-    });
+      setAuth({
+        accessToken: refreshRes.accessToken,
+        patient: profileRes.data,
+        isRestoring: false,
+      });
+    } catch {
+      if (cancelled) return;
 
-  } catch {
-    if (cancelled) return;
-
-    setAuth({
-      accessToken: null,
-      patient: null,
-      isRestoring: false,
-    });
-  }
-}
-
-
-  restoreSession();
+      setAuth({
+        accessToken: null,
+        patient: null,
+        isRestoring: false,
+      });
+    }
+  })();
 
   return () => {
     cancelled = true;
   };
-}, [auth.accessToken]);
+}, []); // ⚠️ EMPTY DEP ARRAY
+
 
 
   function loginSuccess(data: {
@@ -164,13 +158,18 @@ async function restoreSession() {
     });
   }
 
-  function logout() {
-    setAuth({
-      accessToken: null,
-      patient: null,
-      isRestoring: false,
-    });
-  }
+async function logout() {
+  try {
+    await logoutPatient();
+  } catch {}
+
+  setAuth({
+    accessToken: null,
+    patient: null,
+    isRestoring: false,
+  });
+}
+
 
   return (
     <AuthContext.Provider value={{ auth, loginSuccess, logout }}>

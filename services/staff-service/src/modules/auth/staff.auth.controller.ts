@@ -212,6 +212,48 @@ export class StaffAuthController {
     }
   }
 
+  async logout(req: Request, res: Response) {
+    try {
+      console.log('STAFF LOGOUT ROUTE HIT');
+
+      const refreshToken = req.cookies.staffRefreshToken;
+
+      if (refreshToken) {
+        const tokenHash = hashToken(refreshToken);
+
+        // Find the token row
+        const result = await pool.query(
+          `SELECT staff_id FROM staff_refresh_tokens WHERE token_hash = $1`,
+          [tokenHash]
+        );
+
+        const row = result.rows[0];
+
+        if (row) {
+          // 🔥 Revoke ALL refresh tokens for that staff user
+          await pool.query(
+            `UPDATE staff_refresh_tokens
+           SET revoked = true
+           WHERE staff_id = $1`,
+            [row.staff_id]
+          );
+        }
+      }
+
+      res.clearCookie('staffRefreshToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+
+      return res.status(200).json({ message: 'Staff logged out' });
+    } catch (err) {
+      console.error('STAFF LOGOUT ERROR:', err);
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+  }
+
   async me(req: Request, res: Response) {
     try {
       const authHeader = req.headers.authorization;
