@@ -55,4 +55,37 @@ export class StaffController {
       return res.status(400).json({ error: (err as Error).message });
     }
   }
+
+  async getAvailability(req: Request, res: Response) {
+    try {
+      const doctorIdParam = req.params.doctorId;
+      const doctorId = Array.isArray(doctorIdParam)
+        ? doctorIdParam[0]
+        : doctorIdParam;
+
+      const dayParam = req.params.dayOfWeek;
+      const dayOfWeek = Number(
+        Array.isArray(dayParam) ? dayParam[0] : dayParam
+      );
+
+      if (!doctorId || isNaN(dayOfWeek)) {
+        return res.status(400).json({
+          error: 'Invalid parameters',
+        });
+      }
+
+      const availability = await staffService.getAvailability(
+        doctorId,
+        dayOfWeek
+      );
+
+      if (!availability) {
+        return res.json(null);
+      }
+
+      return res.json(availability);
+    } catch {
+      return res.status(500).json({ error: 'Failed to fetch availability' });
+    }
+  }
 }

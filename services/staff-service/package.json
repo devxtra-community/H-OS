@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "init-db": "tsx scripts/init-db.ts",
     "build": "tsc"
   },
   "keywords": [],

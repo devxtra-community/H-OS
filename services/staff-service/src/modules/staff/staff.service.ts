@@ -80,6 +80,21 @@ class StaffService {
   async deactivateStaff(id: string) {
     await pool.query(`UPDATE staff SET is_active = false WHERE id = $1`, [id]);
   }
+
+  async getAvailability(doctorId: string, dayOfWeek: number) {
+    const result = await pool.query(
+      `
+    SELECT *
+    FROM doctor_availability
+    WHERE doctor_id = $1
+    AND day_of_week = $2
+    LIMIT 1
+    `,
+      [doctorId, dayOfWeek]
+    );
+
+    return result.rows[0] || null;
+  }
 }
 
 export const staffService = new StaffService();

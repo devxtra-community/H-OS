@@ -9,5 +9,9 @@ router.post('/', controller.createStaff.bind(controller));
 router.get('/:id', controller.getStaffById.bind(controller));
 router.put('/:id', controller.updateStaff.bind(controller));
 router.delete('/:id', controller.deactivateStaff.bind(controller));
+router.get(
+  '/availability/:doctorId/:dayOfWeek',
+  controller.getAvailability.bind(controller)
+);
 
 export default router;

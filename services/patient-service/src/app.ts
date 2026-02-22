@@ -5,6 +5,7 @@ import patientRoutes from './modules/patients/patient.routes';
 import healthRoutes from './routes/health';
 import authRoutes from './modules/auth/auth.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
+import appointmentRoutes from '../src/modules/appointments/appointment.routes';
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use('/auth', authRoutes);
 app.use('/health', healthRoutes);
 
 app.use('/patients', patientRoutes);
+
+app.use('/appointments', appointmentRoutes);
 
 // Error handling
 app.use(errorMiddleware);

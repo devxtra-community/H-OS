@@ -4,12 +4,13 @@ import healthRoutes from './routes/health';
 import { patientAuthProxy } from './proxy/patient.auth.proxy';
 import { patientDataProxy } from './proxy/patient.data.proxy';
 import { staffAuthProxy } from './proxy/staff.auth.proxy';
-// import { staffDataProxy } from './proxy/staff.data.proxy';
 import staffDataRouter from './routes/staff.data.router';
 import { authenticate } from './middlewares/auth.middleware';
 import { requirePatientSelf } from './middlewares/patient.guard';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const app = express();
+
 app.use(
   cors({
     origin: 'http://localhost:3000',
@@ -20,12 +21,34 @@ app.use(
 // health
 app.use('/health', healthRoutes);
 
-// 🔓 PUBLIC auth (NO JWT)
+// PUBLIC auth
 app.use('/patients/public', patientAuthProxy);
-// 🔐 PROTECTED patient data
+
+// PATIENT self routes
 app.use('/patients', authenticate, requirePatientSelf, patientDataProxy);
 
+// STAFF auth
 app.use('/staff/public', staffAuthProxy);
 app.use('/staff', authenticate, staffDataRouter);
+
+//Appointment routes (accessible by PATIENT + STAFF + ADMIN)
+
+app.use(
+  '/appointments',
+  authenticate,
+  (req: any, _res, next) => {
+    if (req.user) {
+      req.headers['x-user-id'] = req.user.sub;
+      req.headers['x-user-role'] = req.user.role;
+      req.headers['x-user-type'] = req.user.type;
+    }
+    next();
+  },
+  createProxyMiddleware({
+    target: process.env.PATIENT_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: (path) => `/appointments${path}`,
+  })
+);
 
 export default app;
