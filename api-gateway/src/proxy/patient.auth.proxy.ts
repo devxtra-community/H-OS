@@ -1,9 +1,11 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
-export const patientProxy = createProxyMiddleware({
+export const patientAuthProxy = createProxyMiddleware({
   target: 'http://localhost:3001',
   changeOrigin: true,
+
+  // /patients/public/auth/login → /auth/login
   pathRewrite: {
-    '^/patients': '',
+    '^/patients/public': '',
   },
 });

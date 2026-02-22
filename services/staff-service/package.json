@@ -1,5 +1,5 @@
 {
-  "name": "api-gateway",
+  "name": "@h-os/staff-service",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "init-db": "tsx scripts/init-db.ts",
     "build": "tsc"
   },
   "keywords": [],
@@ -14,20 +15,19 @@
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
+    "@prisma/client": "^7.3.0",
     "bcrypt": "^6.0.0",
-    "cors": "^2.8.6",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
-    "http-proxy-middleware": "^3.0.5",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.18.0"
+    "prisma": "^7.3.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.1.0",
-    "@types/pg": "^8.16.0",
     "dotenv": "^17.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

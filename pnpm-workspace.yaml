@@ -1,4 +1,12 @@
 packages:
-  - "services/*"
-  - "api-gateway"
-  - "frontend"
+  - services/*
+  - api-gateway
+  - frontend
+
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - bcrypt
+  - esbuild
+  - prisma
+  - sharp
+  - unrs-resolver
