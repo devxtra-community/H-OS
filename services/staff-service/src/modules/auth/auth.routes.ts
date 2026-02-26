@@ -10,6 +10,12 @@ const staffController = new StaffAuthController();
 // Admin login
 router.post('/admin/login', adminController.login.bind(adminController));
 
+router.post('/admin/refresh', adminController.refresh.bind(adminController));
+
+router.get('/admin/me', adminController.me.bind(adminController));
+
+router.post('/admin/logout', adminController.logout.bind(adminController));
+
 // Staff login
 router.post('/login', staffController.login.bind(staffController));
 
