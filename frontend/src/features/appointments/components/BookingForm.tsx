@@ -20,16 +20,18 @@ export default function BookingForm() {
 
   const mutation = useBookAppointment();
 
-  function handleBook() {
-    if (!selectedSlot || !doctorId || !date) return;
+function handleBook() {
+  if (!selectedSlot || !doctorId || !date) return;
 
-    mutation.mutate({
-      doctorId,
-      appointmentDate: date,
-      appointmentTime: selectedSlot,
-      durationMinutes: 15,
-    });
-  }
+  // Combine date + time into ISO timestamp
+  const fullDateTime = `${date}T${selectedSlot}:00`;
+
+  mutation.mutate({
+    doctorId,
+    appointmentTime: fullDateTime,
+    durationMinutes: 15,
+  });
+}
 
   return (
     <div className="space-y-6 max-w-xl bg-white p-6 rounded-xl shadow-md">

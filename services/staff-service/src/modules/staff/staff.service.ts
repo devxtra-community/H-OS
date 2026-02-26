@@ -96,7 +96,7 @@ class StaffService {
   async getStaffById(id: string) {
     const result = await pool.query(
       `
-      SELECT id, name, email, department, role, job_title, is_active
+      SELECT id, name, email, department_id, role, job_title, is_active
       FROM staff
       WHERE id = $1
       `,
