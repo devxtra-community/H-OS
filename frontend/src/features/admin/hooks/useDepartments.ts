@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/src/lib/api';
+import { getDepartments, Department } from '../api/departments.api';
 
 export function useDepartments() {
-  return useQuery({
+  return useQuery<Department[]>({
     queryKey: ['departments'],
-    queryFn: async () => {
-      const res = await api.get('/staff/departments');
-      return res.data;
-    },
+    queryFn: getDepartments,
   });
 }
