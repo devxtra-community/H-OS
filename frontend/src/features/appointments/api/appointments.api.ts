@@ -11,17 +11,14 @@ export async function getAvailableSlots(
 
   return data;
 }
-
 export async function bookAppointment(payload: {
   doctorId: string;
   appointmentTime: string;
-  appointmentDate: string;
   durationMinutes?: number;
 }) {
   const { data } = await api.post('/appointments', payload);
   return data;
 }
-
 export async function getDoctorsByDepartment(
   departmentId: string
 ): Promise<Doctor[]> {

@@ -9,8 +9,9 @@ export class AppointmentRepository {
     durationMinutes: number;
     priority: 'NORMAL' | 'HIGH';
   }) {
-    const result = await pool.query(
-      `
+    try {
+      const result = await pool.query(
+        `
       INSERT INTO appointments (
         id,
         doctor_id,
@@ -21,21 +22,27 @@ export class AppointmentRepository {
         status
       )
       VALUES ($1,$2,$3,$4,$5,$6,'SCHEDULED')
-      ON CONFLICT (doctor_id, appointment_time)
-      DO NOTHING
       RETURNING *;
       `,
-      [
-        randomUUID(),
-        data.doctorId,
-        data.patientId,
-        data.appointmentTime,
-        data.durationMinutes,
-        data.priority,
-      ]
-    );
+        [
+          randomUUID(),
+          data.doctorId,
+          data.patientId,
+          data.appointmentTime,
+          data.durationMinutes,
+          data.priority,
+        ]
+      );
 
-    return result.rows[0] || null;
+      return result.rows[0];
+    } catch (err: any) {
+      if (err.code === '23505') {
+        // unique violation
+        return null;
+      }
+
+      throw err;
+    }
   }
 
   async getDoctorAppointmentsForDay(doctorId: string, date: string) {
@@ -132,7 +139,12 @@ export class AppointmentRepository {
       [doctorId, date]
     );
 
-    return result.rows.map((r) => new Date(r.appointment_time).toISOString());
+    return result.rows.map((r) => {
+      const d = new Date(r.appointment_time);
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    });
   }
 }
 

@@ -12,6 +12,7 @@ export class AppointmentService {
   }) {
     // Validate doctor exists
     try {
+      console.log('BOOK SERVICE HIT');
       await axios.get(
         `${process.env.STAFF_SERVICE_URL}/staff/${data.doctorId}`
       );

@@ -4,6 +4,7 @@ import { appointmentController } from './appointment.controller';
 const router = Router();
 
 router.post('/', (req, res) => appointmentController.book(req, res));
+router.post('', appointmentController.book.bind(appointmentController));
 
 router.get('/my-status', (req, res) =>
   appointmentController.myStatus(req, res)
