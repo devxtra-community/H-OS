@@ -394,7 +394,6 @@ export class AppointmentService {
   }
 
   async getAvailableSlots(doctorId: string, date: string) {
-    // 1️⃣ Get doctor availability from staff-service
     const dayOfWeek = new Date(date).getDay();
 
     const availabilityResponse = await axios.get(
@@ -409,7 +408,7 @@ export class AppointmentService {
 
     const { start_time, end_time, slot_duration } = availability;
 
-    // 2️⃣ Generate slots
+    // Generate slots
     const slots: string[] = [];
 
     const start = new Date(`${date}T${start_time}`);
@@ -418,11 +417,15 @@ export class AppointmentService {
     let current = new Date(start);
 
     while (current < end) {
-      slots.push(current.toISOString());
+      const hours = current.getHours().toString().padStart(2, '0');
+      const minutes = current.getMinutes().toString().padStart(2, '0');
+
+      slots.push(`${hours}:${minutes}`);
+
       current = new Date(current.getTime() + slot_duration * 60000);
     }
 
-    // 3️⃣ Remove booked slots
+    // Remove booked slots
     const booked = await appointmentRepository.getBookedSlots(doctorId, date);
 
     const available = slots.filter((slot) => !booked.includes(slot));

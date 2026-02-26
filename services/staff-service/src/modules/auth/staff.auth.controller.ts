@@ -30,11 +30,19 @@ export class StaffAuthController {
 
       const result = await pool.query(
         `
-        SELECT id, name, email, password_hash, role, job_title, department
-        FROM staff
-        WHERE email = $1 AND is_active = true
-        LIMIT 1
-        `,
+  SELECT 
+    s.id,
+    s.name,
+    s.email,
+    s.password_hash,
+    s.role,
+    s.job_title,
+    d.id AS department_id,
+    d.name AS department
+  FROM staff s
+  JOIN departments d ON s.department_id = d.id
+  WHERE s.email = $1
+  `,
         [email]
       );
 
@@ -57,7 +65,7 @@ export class StaffAuthController {
           type: 'STAFF',
           role: staff.role,
           job_title: staff.job_title,
-          department: staff.department,
+          department_id: staff.department_id,
         },
         process.env.JWT_SECRET!,
         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
@@ -122,6 +130,7 @@ export class StaffAuthController {
       if (!refreshToken) {
         return res.status(401).json({ error: 'No refresh token' });
       }
+      console.log('Incoming token:', refreshToken);
 
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
 
@@ -275,7 +284,7 @@ export class StaffAuthController {
 
       const result = await pool.query(
         `
-      SELECT id, name, email, department, role, job_title
+      SELECT id, name, email, department_id, role, job_title
       FROM staff
       WHERE id = $1
       `,

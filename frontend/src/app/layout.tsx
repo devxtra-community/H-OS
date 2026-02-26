@@ -1,5 +1,8 @@
-import './globals.css'
-import { AuthProvider } from '../auth/auth.provider';
+'use client';
+
+import './globals.css';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../lib/react-query';
 
 export default function RootLayout({
   children,
@@ -9,7 +12,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </body>
     </html>
   );

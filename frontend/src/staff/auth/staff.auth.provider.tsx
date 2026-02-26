@@ -107,39 +107,48 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
   /**
    * ✅ Restore session ONCE on mount
    */
-  useEffect(() => {
-    let cancelled = false;
+useEffect(() => {
+  let cancelled = false;
 
-    (async () => {
-      try {
-        const refreshRes = await refreshStaff();
+  (async () => {
+    // 🔥 IMPORTANT: If already logged in, skip restore
+    if (tokenRef.current) {
+      setAuth(prev => ({
+        ...prev,
+        isRestoring: false,
+      }));
+      return;
+    }
 
-        tokenRef.current = refreshRes.accessToken;
+    try {
+      const refreshRes = await refreshStaff();
 
-        const profile = await api.get('/staff/public/auth/me');
+      tokenRef.current = refreshRes.accessToken;
 
-        if (cancelled) return;
+      const profile = await api.get('/staff/public/auth/me');
 
-        setAuth({
-          accessToken: refreshRes.accessToken,
-          staff: profile.data,
-          isRestoring: false,
-        });
-      } catch {
-        if (cancelled) return;
+      if (cancelled) return;
 
-        setAuth({
-          accessToken: null,
-          staff: null,
-          isRestoring: false,
-        });
-      }
-    })();
+      setAuth({
+        accessToken: refreshRes.accessToken,
+        staff: profile.data,
+        isRestoring: false,
+      });
+    } catch {
+      if (cancelled) return;
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      setAuth({
+        accessToken: null,
+        staff: null,
+        isRestoring: false,
+      });
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   function loginSuccess(data: {
     accessToken: string;
