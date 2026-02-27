@@ -9,6 +9,7 @@ interface Props {
 }
 
 export default function AppointmentCard({ appointment }: Props) {
+  console.log(appointment);
   const cancelMutation = useCancelAppointment();
   const [showReschedule, setShowReschedule] = useState(false);
 
@@ -27,7 +28,7 @@ export default function AppointmentCard({ appointment }: Props) {
   return (
     <div className="bg-white p-4 rounded-lg shadow space-y-2">
       <p>
-        <strong>Doctor:</strong> {appointment.doctor_name}
+        <strong>Doctor:</strong> {appointment.doctor_id}
       </p>
 
       <p>

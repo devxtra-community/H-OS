@@ -38,10 +38,13 @@ app.use(
   authenticate,
   (req: any, _res, next) => {
     if (req.user) {
-      req.headers['x-user-id'] = req.user.sub;
-      req.headers['x-user-role'] = req.user.role;
-      req.headers['x-user-type'] = req.user.type;
+      if (req.user.sub) req.headers['x-user-id'] = String(req.user.sub);
+
+      if (req.user.role) req.headers['x-user-role'] = String(req.user.role);
+
+      if (req.user.type) req.headers['x-user-type'] = String(req.user.type);
     }
+
     next();
   },
   createProxyMiddleware({

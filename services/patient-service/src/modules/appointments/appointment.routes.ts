@@ -42,4 +42,8 @@ router.get('/available-slots', (req, res) =>
   appointmentController.availableSlots(req, res)
 );
 
+router.post('/emergency', (req, res) =>
+  appointmentController.emergency(req, res)
+);
+
 export default router;
