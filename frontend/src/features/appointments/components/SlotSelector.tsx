@@ -17,6 +17,11 @@ export default function SlotSelector({
     return <p>No slots available</p>;
   }
 
+  function formatTo12Hour(time: string) {
+    const date = new Date(`1970-01-01T${time}:00`);
+    return format(date, 'h:mm a'); // 1:00 PM
+  }
+
   return (
     <div className="grid grid-cols-3 gap-3">
       {slots.map((slot) => {
@@ -32,7 +37,7 @@ export default function SlotSelector({
                 : 'bg-white hover:bg-gray-100'
             }`}
           >
-            {slot}
+            {formatTo12Hour(slot)}
           </button>
         );
       })}

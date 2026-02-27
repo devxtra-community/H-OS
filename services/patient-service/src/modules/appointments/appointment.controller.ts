@@ -383,6 +383,43 @@ export class AppointmentController {
       });
     }
   }
+  async emergency(req: Request, res: Response) {
+    try {
+      const userType = req.headers['x-user-type'];
+
+      if (userType !== 'STAFF') {
+        return res.status(403).json({
+          error: 'Only staff can create emergency cases',
+        });
+      }
+
+      const { doctorId, patientId } = req.body;
+
+      if (!doctorId || !patientId) {
+        return res.status(400).json({
+          error: 'doctorId and patientId required',
+        });
+      }
+
+      const appointment = await appointmentService.createEmergencyAppointment(
+        doctorId,
+        patientId
+      );
+
+      return res.status(201).json(appointment);
+    } catch (err: any) {
+      if (err.message === 'Doctor not found')
+        return res.status(404).json({ error: 'Doctor not found' });
+
+      if (err.message === 'DOCTOR_NOT_AVAILABLE')
+        return res.status(400).json({ error: 'Doctor not available today' });
+
+      if (err.message === 'SLOT_TAKEN')
+        return res.status(409).json({ error: 'Slot conflict occurred' });
+
+      return res.status(500).json({ error: 'Emergency creation failed' });
+    }
+  }
 }
 
 export const appointmentController = new AppointmentController();
