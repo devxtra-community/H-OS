@@ -2,9 +2,7 @@ import { Request, Response } from 'express';
 import { patientService } from '../patients/patient.service';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { Pool } from 'pg';
 import { pool } from '../../db';
-import { log } from 'console';
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -12,22 +10,24 @@ export class AuthController {
       const patient = await patientService.registerPatient(req.body);
       return res.status(201).json(patient);
     } catch (err) {
-      return res.status(400).json({ error: (err as Error).message });
+      return res.status(400).json({
+        error: (err as Error).message,
+      });
     }
   }
 
   async login(req: Request, res: Response) {
     try {
       const { email, password } = req.body;
-      console.log(req.body);
+
       const result = await patientService.loginPatient(email, password);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
       return res.status(200).json({
@@ -35,26 +35,28 @@ export class AuthController {
         patient: result.user,
       });
     } catch {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({
+        error: 'Invalid credentials',
+      });
     }
   }
 
   async refresh(req: Request, res: Response) {
     try {
-      console.log('Refresh endpoint hit');
-      console.log('cookies recieved ', req.cookies);
+      const refreshToken = req.cookies?.refreshToken;
 
-      const refreshToken = req.cookies.refreshToken;
       if (!refreshToken) {
-        return res.status(401).json({ error: 'No refresh token' });
+        return res.status(401).json({
+          error: 'No refresh token',
+        });
       }
 
       const tokens = await patientService.refreshTokens(refreshToken);
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -64,7 +66,9 @@ export class AuthController {
         userId: tokens.userId,
       });
     } catch {
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      return res.status(401).json({
+        error: 'Invalid refresh token',
+      });
     }
   }
 
@@ -73,7 +77,9 @@ export class AuthController {
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({
+          error: 'Unauthorized',
+        });
       }
 
       const token = authHeader.split(' ')[1];
@@ -85,7 +91,9 @@ export class AuthController {
       const patient = await patientService.getPatientById(payload.sub);
 
       if (!patient) {
-        return res.status(404).json({ error: 'Patient not found' });
+        return res.status(404).json({
+          error: 'Patient not found',
+        });
       }
 
       return res.status(200).json({
@@ -95,17 +103,15 @@ export class AuthController {
         role: patient.role,
       });
     } catch {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({
+        error: 'Unauthorized',
+      });
     }
   }
 
   async logout(req: Request, res: Response) {
     try {
-      console.log('logout cookies', req.cookies);
-
-      console.log('LOGOUT ROUTE HIT');
-
-      const refreshToken = req.cookies.refreshToken;
+      const refreshToken = req.cookies?.refreshToken;
 
       if (refreshToken) {
         const tokenHash = crypto
@@ -113,7 +119,6 @@ export class AuthController {
           .update(refreshToken)
           .digest('hex');
 
-        // Find the token row
         const result = await pool.query(
           `SELECT patient_id FROM patient_refresh_tokens WHERE token_hash = $1`,
           [tokenHash]
@@ -122,11 +127,10 @@ export class AuthController {
         const row = result.rows[0];
 
         if (row) {
-          // 🔥 Revoke ALL refresh tokens for that patient
           await pool.query(
             `UPDATE patient_refresh_tokens
-           SET revoked = true
-           WHERE patient_id = $1`,
+             SET revoked = true
+             WHERE patient_id = $1`,
             [row.patient_id]
           );
         }
@@ -134,14 +138,18 @@ export class AuthController {
 
       res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         path: '/',
       });
 
-      return res.status(200).json({ message: 'Logged out' });
+      return res.status(200).json({
+        message: 'Logged out',
+      });
     } catch {
-      return res.status(500).json({ error: 'Logout failed' });
+      return res.status(500).json({
+        error: 'Logout failed',
+      });
     }
   }
 }

@@ -5,16 +5,19 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { pool } from '../../db';
 import { randomUUID } from 'crypto';
-import { error } from 'console';
 
 /**
  * ---- JWT CONFIG
  */
-const ACCESS_TOKEN_EXPIRES_IN = process.env
-  .ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
+const ACCESS_TOKEN_EXPIRES_IN =
+  (process.env.ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
+  '15m';
 
-const REFRESH_TOKEN_EXPIRES_IN = process.env
-  .REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
+const REFRESH_TOKEN_EXPIRES_IN =
+  (process.env.REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
+  '7d';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * ---- HELPERS
@@ -30,19 +33,19 @@ export class StaffAuthController {
 
       const result = await pool.query(
         `
-  SELECT 
-    s.id,
-    s.name,
-    s.email,
-    s.password_hash,
-    s.role,
-    s.job_title,
-    d.id AS department_id,
-    d.name AS department
-  FROM staff s
-  JOIN departments d ON s.department_id = d.id
-  WHERE s.email = $1
-  `,
+        SELECT 
+          s.id,
+          s.name,
+          s.email,
+          s.password_hash,
+          s.role,
+          s.job_title,
+          d.id AS department_id,
+          d.name AS department
+        FROM staff s
+        JOIN departments d ON s.department_id = d.id
+        WHERE s.email = $1
+        `,
         [email]
       );
 
@@ -101,8 +104,8 @@ export class StaffAuthController {
        */
       res.cookie('staffRefreshToken', refreshToken, {
         httpOnly: true,
-        secure: false, // true in prod
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -118,19 +121,17 @@ export class StaffAuthController {
           department: staff.department,
         },
       });
-    } catch (err) {
-      console.error('STAFF LOGIN ERROR:', err);
+    } catch {
       return res.status(500).json({ error: 'Staff login failed' });
     }
   }
 
   async refresh(req: Request, res: Response) {
     try {
-      const refreshToken = req.cookies.staffRefreshToken;
+      const refreshToken = req.cookies?.staffRefreshToken;
       if (!refreshToken) {
         return res.status(401).json({ error: 'No refresh token' });
       }
-      console.log('Incoming token:', refreshToken);
 
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!);
 
@@ -154,8 +155,7 @@ export class StaffAuthController {
         return res.status(401).json({ error: 'Refresh token revoked' });
       }
 
-      const expiresAt = new Date(stored.expires_at);
-      if (expiresAt.getTime() < Date.now()) {
+      if (new Date(stored.expires_at).getTime() < Date.now()) {
         return res.status(401).json({ error: 'Refresh token expired' });
       }
 
@@ -206,8 +206,8 @@ export class StaffAuthController {
        */
       res.cookie('staffRefreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: false, // true in prod
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -215,22 +215,18 @@ export class StaffAuthController {
       return res.status(200).json({
         accessToken: newAccessToken,
       });
-    } catch (err) {
-      console.error('STAFF REFRESH ERROR:', err);
+    } catch {
       return res.status(401).json({ error: 'Refresh failed' });
     }
   }
 
   async logout(req: Request, res: Response) {
     try {
-      console.log('STAFF LOGOUT ROUTE HIT');
-
-      const refreshToken = req.cookies.staffRefreshToken;
+      const refreshToken = req.cookies?.staffRefreshToken;
 
       if (refreshToken) {
         const tokenHash = hashToken(refreshToken);
 
-        // Find the token row
         const result = await pool.query(
           `SELECT staff_id FROM staff_refresh_tokens WHERE token_hash = $1`,
           [tokenHash]
@@ -239,11 +235,10 @@ export class StaffAuthController {
         const row = result.rows[0];
 
         if (row) {
-          // 🔥 Revoke ALL refresh tokens for that staff user
           await pool.query(
             `UPDATE staff_refresh_tokens
-           SET revoked = true
-           WHERE staff_id = $1`,
+             SET revoked = true
+             WHERE staff_id = $1`,
             [row.staff_id]
           );
         }
@@ -251,14 +246,15 @@ export class StaffAuthController {
 
       res.clearCookie('staffRefreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         path: '/',
       });
 
-      return res.status(200).json({ message: 'Staff logged out' });
-    } catch (err) {
-      console.error('STAFF LOGOUT ERROR:', err);
+      return res.status(200).json({
+        message: 'Staff logged out',
+      });
+    } catch {
       return res.status(500).json({ error: 'Logout failed' });
     }
   }
@@ -284,10 +280,10 @@ export class StaffAuthController {
 
       const result = await pool.query(
         `
-      SELECT id, name, email, department_id, role, job_title
-      FROM staff
-      WHERE id = $1
-      `,
+        SELECT id, name, email, department_id, role, job_title
+        FROM staff
+        WHERE id = $1
+        `,
         [payload.sub]
       );
 

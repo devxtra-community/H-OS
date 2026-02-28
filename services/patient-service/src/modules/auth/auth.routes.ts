@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller';
 
-console.log('AUTH ROUTES LOADED');
-
 const router = Router();
 const controller = new AuthController();
 

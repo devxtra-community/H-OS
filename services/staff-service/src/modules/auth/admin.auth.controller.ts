@@ -11,8 +11,11 @@ const ACCESS_TOKEN_EXPIRES_IN =
   (process.env.ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
   '15m';
 
-const REFRESH_TOKEN_EXPIRES_IN = process.env
-  .REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'];
+const REFRESH_TOKEN_EXPIRES_IN =
+  (process.env.REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
+  '7d';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export class AdminAuthController {
   async login(req: Request, res: Response) {
@@ -65,8 +68,8 @@ export class AdminAuthController {
 
       res.cookie('staffRefreshToken', refreshToken, {
         httpOnly: true,
-        secure: false, // true in prod
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -78,15 +81,14 @@ export class AdminAuthController {
           email: admin.email,
         },
       });
-    } catch (err) {
-      console.error('ADMIN LOGIN ERROR:', err);
+    } catch {
       return res.status(500).json({ error: 'Admin login failed' });
     }
   }
 
   async refresh(req: Request, res: Response) {
     try {
-      const refreshToken = req.cookies.staffRefreshToken;
+      const refreshToken = req.cookies?.staffRefreshToken;
       if (!refreshToken) {
         return res.status(401).json({ error: 'No refresh token' });
       }
@@ -147,12 +149,14 @@ export class AdminAuthController {
     try {
       res.clearCookie('staffRefreshToken', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
         path: '/',
       });
 
-      return res.status(200).json({ message: 'Admin logged out' });
+      return res.status(200).json({
+        message: 'Admin logged out',
+      });
     } catch {
       return res.status(500).json({ error: 'Logout failed' });
     }
