@@ -4,6 +4,7 @@ import { appointmentController } from './appointment.controller';
 const router = Router();
 
 router.post('/', (req, res) => appointmentController.book(req, res));
+router.post('', appointmentController.book.bind(appointmentController));
 
 router.get('/my-status', (req, res) =>
   appointmentController.myStatus(req, res)
@@ -39,6 +40,10 @@ router.post('/reschedule/:id', (req, res) =>
 
 router.get('/available-slots', (req, res) =>
   appointmentController.availableSlots(req, res)
+);
+
+router.post('/emergency', (req, res) =>
+  appointmentController.emergency(req, res)
 );
 
 export default router;

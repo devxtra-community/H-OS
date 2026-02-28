@@ -12,6 +12,7 @@ export class AppointmentService {
   }) {
     // Validate doctor exists
     try {
+      console.log('BOOK SERVICE HIT');
       await axios.get(
         `${process.env.STAFF_SERVICE_URL}/staff/${data.doctorId}`
       );
@@ -73,7 +74,7 @@ export class AppointmentService {
       doctorId: data.doctorId,
       patientId: data.patientId,
       appointmentTime: new Date(data.appointmentTime),
-      durationMinutes: data.durationMinutes ?? 15,
+      durationMinutes: slot_duration,
       priority: 'NORMAL',
     });
 
@@ -154,10 +155,21 @@ export class AppointmentService {
         estimatedStart = new Date(appt.actual_start_time);
         currentTime = new Date(appt.actual_end_time);
       } else if (appt.status === 'IN_PROGRESS' && appt.actual_start_time) {
-        estimatedStart = new Date(appt.actual_start_time);
-        currentTime = new Date(
-          estimatedStart.getTime() + appt.duration_minutes * 60000
+        const actualStart = new Date(appt.actual_start_time);
+        const plannedEnd = new Date(
+          actualStart.getTime() + appt.duration_minutes * 60000
         );
+
+        const now = new Date();
+
+        console.log('Raw DB time:', appt.appointment_time);
+        console.log('JS Date:', new Date(appt.appointment_time));
+        console.log('ISO:', new Date(appt.appointment_time).toISOString());
+
+        // If doctor exceeded duration, use real time
+        currentTime = now > plannedEnd ? now : plannedEnd;
+
+        estimatedStart = actualStart;
       } else {
         const planned = new Date(appt.appointment_time);
 
@@ -249,7 +261,7 @@ export class AppointmentService {
   }
 
   async getMyStatus(patientId: string) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
 
     const myAppointment =
       await appointmentRepository.getPatientActiveAppointment(patientId, today);
@@ -394,7 +406,6 @@ export class AppointmentService {
   }
 
   async getAvailableSlots(doctorId: string, date: string) {
-    // 1️⃣ Get doctor availability from staff-service
     const dayOfWeek = new Date(date).getDay();
 
     const availabilityResponse = await axios.get(
@@ -409,7 +420,7 @@ export class AppointmentService {
 
     const { start_time, end_time, slot_duration } = availability;
 
-    // 2️⃣ Generate slots
+    // Generate slots
     const slots: string[] = [];
 
     const start = new Date(`${date}T${start_time}`);
@@ -418,16 +429,64 @@ export class AppointmentService {
     let current = new Date(start);
 
     while (current < end) {
-      slots.push(current.toISOString());
+      const hours = current.getHours().toString().padStart(2, '0');
+      const minutes = current.getMinutes().toString().padStart(2, '0');
+
+      slots.push(`${hours}:${minutes}`);
+
       current = new Date(current.getTime() + slot_duration * 60000);
     }
 
-    // 3️⃣ Remove booked slots
+    // Remove booked slots
     const booked = await appointmentRepository.getBookedSlots(doctorId, date);
 
     const available = slots.filter((slot) => !booked.includes(slot));
 
     return available;
+  }
+
+  async createEmergencyAppointment(doctorId: string, patientId: string) {
+    // Validate doctor exists
+    try {
+      await axios.get(`${process.env.STAFF_SERVICE_URL}/staff/${doctorId}`);
+    } catch {
+      throw new Error('Doctor not found');
+    }
+
+    const now = new Date();
+
+    // Get doctor availability to fetch slot duration
+    const dayOfWeek = now.getDay();
+
+    const availabilityResponse = await axios.get(
+      `${process.env.STAFF_SERVICE_URL}/staff/availability/${doctorId}/${dayOfWeek}`
+    );
+
+    const availability = availabilityResponse.data;
+
+    if (!availability) {
+      throw new Error('DOCTOR_NOT_AVAILABLE');
+    }
+
+    const { slot_duration } = availability;
+
+    // Create emergency appointment immediately
+    const appointment = await appointmentRepository.createAppointment({
+      doctorId,
+      patientId,
+      appointmentTime: now,
+      durationMinutes: slot_duration,
+      priority: 'HIGH',
+    });
+
+    if (!appointment) {
+      throw new Error('SLOT_TAKEN');
+    }
+
+    // Immediately check in
+    await this.updateStatus(appointment.id, 'CHECKED_IN');
+
+    return appointment;
   }
 }
 

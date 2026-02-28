@@ -5,8 +5,7 @@ import patientRoutes from './modules/patients/patient.routes';
 import healthRoutes from './routes/health';
 import authRoutes from './modules/auth/auth.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
-import appointmentRoutes from '../src/modules/appointments/appointment.routes';
-
+import appointmentRoutes from './modules/appointments/appointment.routes';
 const app = express();
 
 // Middleware
@@ -22,6 +21,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  console.log('ROUTE HIT:', req.method, req.originalUrl);
+  next();
+});
 // 🔓 Public routes (auth)
 app.use('/auth', authRoutes);
 

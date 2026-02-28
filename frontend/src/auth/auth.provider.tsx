@@ -115,6 +115,15 @@ useEffect(() => {
   let cancelled = false;
 
   (async () => {
+    // 🔥 IMPORTANT FIX
+    if (accessTokenRef.current) {
+      setAuth(prev => ({
+        ...prev,
+        isRestoring: false,
+      }));
+      return;
+    }
+
     try {
       const refreshRes = await refreshPatient();
 
@@ -143,20 +152,22 @@ useEffect(() => {
   return () => {
     cancelled = true;
   };
-}, []); // ⚠️ EMPTY DEP ARRAY
+}, []);
 
 
 
-  function loginSuccess(data: {
-    accessToken: string;
-    patient: Patient;
-  }) {
-    setAuth({
-      accessToken: data.accessToken,
-      patient: data.patient,
-      isRestoring: false,
-    });
-  }
+function loginSuccess(data: {
+  accessToken: string;
+  patient: Patient;
+}) {
+  accessTokenRef.current = data.accessToken; // 🔥 ADD THIS LINE
+
+  setAuth({
+    accessToken: data.accessToken,
+    patient: data.patient,
+    isRestoring: false,
+  });
+}
 
 async function logout() {
   try {

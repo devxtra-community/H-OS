@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { staffService } from './staff.service';
+import { Pool } from 'pg';
+import { pool } from '../../db';
 
 function getIdParam(req: Request): string {
   const { id } = req.params;
@@ -86,6 +88,75 @@ export class StaffController {
       return res.json(availability);
     } catch {
       return res.status(500).json({ error: 'Failed to fetch availability' });
+    }
+  }
+
+  async setAvailability(req: Request, res: Response) {
+    try {
+      const { doctorId, dayOfWeek, startTime, endTime, slotDuration } =
+        req.body;
+
+      if (
+        !doctorId ||
+        typeof dayOfWeek !== 'number' ||
+        !startTime ||
+        !endTime
+      ) {
+        return res.status(400).json({
+          error: 'Invalid parameters',
+        });
+      }
+
+      const availability = await staffService.upsertAvailability({
+        doctorId,
+        dayOfWeek,
+        startTime,
+        endTime,
+        slotDuration: slotDuration ?? 15,
+      });
+
+      return res.status(200).json(availability);
+    } catch (err) {
+      return res.status(500).json({
+        error: 'Failed to save availability',
+      });
+    }
+  }
+
+  async getDepartments(req: Request, res: Response) {
+    try {
+      const result = await pool.query(
+        `SELECT id, name FROM departments ORDER BY name`
+      );
+      res.json(result.rows);
+    } catch {
+      res.status(500).json({ error: 'Failed to fetch departments' });
+    }
+  }
+
+  async getDoctorsByDepartment(req: Request, res: Response) {
+    try {
+      const departmentId = req.query.department_id as string;
+
+      if (!departmentId) {
+        return res.status(400).json({ error: 'department_id required' });
+      }
+
+      const result = await pool.query(
+        `
+      SELECT id, name, job_title
+      FROM staff
+      WHERE department_id = $1
+      AND role = 'DOCTOR'
+      AND is_active = true
+      ORDER BY name
+      `,
+        [departmentId]
+      );
+
+      return res.json(result.rows);
+    } catch {
+      return res.status(500).json({ error: 'Failed to fetch doctors' });
     }
   }
 }
