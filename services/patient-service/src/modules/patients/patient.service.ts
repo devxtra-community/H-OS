@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-console.log('🔥 REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET);
+// console.log('🔥 REFRESH_TOKEN_SECRET:', process.env.REFRESH_TOKEN_SECRET);
 
 /**
  * ---- JWT CONFIG (typed to avoid TS overload issues)

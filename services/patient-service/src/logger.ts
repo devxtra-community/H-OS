@@ -1,4 +1,4 @@
-import baseLogger from '../../shared/src/logger';
+import baseLogger from '@h-os/shared';
 
 const logger = baseLogger.child({
   service: 'patient-service',

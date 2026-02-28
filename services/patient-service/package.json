@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
+    "start": "node dist/server.js",
     "init-db": "tsx scripts/init-db.ts",
     "build": "tsc"
   },
@@ -13,7 +13,8 @@
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "@h-os/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
