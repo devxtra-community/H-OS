@@ -29,10 +29,6 @@ jobs:
       - name: Build workspace
         run: pnpm -r run build
 
-      # Remove dev dependencies
-      - name: Prune dev dependencies
-        run: pnpm prune --prod
-
       # SSH setup
       - name: Setup SSH
         run: |
