@@ -37,7 +37,7 @@ jobs:
       # ---------------- PREPARE EC2 STRUCTURE ----------------
       - name: Prepare EC2 Directories
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             mkdir -p ${{ secrets.APP_DIR }}/api-gateway/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/patient-service/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/staff-service/dist
@@ -73,19 +73,19 @@ jobs:
       # ---------------- FRONTEND DEPLOY ----------------
       - name: Deploy Frontend Standalone
         run: |
-          # 1️⃣ Standalone server bundle
+          # Standalone server bundle
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
 
-          # 2️⃣ Static assets
+          # Static assets
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/static/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/static/
 
-          # 3️⃣ Public folder
+          # Public assets
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/public/ \
@@ -94,7 +94,7 @@ jobs:
       # ---------------- RESTART SERVICES ----------------
       - name: Restart Services
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             cd ${{ secrets.APP_DIR }}
 
             pm2 reload api-gateway || pm2 start api-gateway/dist/server.js --name api-gateway
