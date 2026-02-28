@@ -34,27 +34,41 @@ jobs:
           chmod 600 ~/.ssh/ec2.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      # ---------------- CREATE FOLDERS ----------------
+      - name: Prepare EC2 Directories
+        run: |
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            mkdir -p ${{ secrets.APP_DIR }}/api-gateway
+            mkdir -p ${{ secrets.APP_DIR }}/services/patient-service
+            mkdir -p ${{ secrets.APP_DIR }}/services/staff-service
+            mkdir -p ${{ secrets.APP_DIR }}/frontend
+          EOF
+
       # ---------------- BACKEND DEPLOY ----------------
-      - name: Deploy Backend
+      - name: Deploy API Gateway
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            api-gateway/dist \
-            services/patient-service/dist \
-            services/staff-service/dist \
-            api-gateway/package.json \
-            services/patient-service/package.json \
-            services/staff-service/package.json \
-            node_modules \
-            pnpm-lock.yaml \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/
+            api-gateway/dist/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/api-gateway/dist/
+
+      - name: Deploy Patient Service
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            services/patient-service/dist/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/services/patient-service/dist/
+
+      - name: Deploy Staff Service
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            services/staff-service/dist/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/services/staff-service/dist/
 
       # ---------------- FRONTEND DEPLOY ----------------
       - name: Deploy Frontend Standalone
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "mkdir -p ${{ secrets.APP_DIR }}/frontend"
-
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
@@ -70,6 +84,7 @@ jobs:
             frontend/public/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
 
+      # ---------------- RESTART SERVICES ----------------
       - name: Restart Services
         run: |
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
