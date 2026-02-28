@@ -34,14 +34,18 @@ jobs:
           chmod 600 ~/.ssh/ec2.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # ---------------- CREATE FOLDERS ----------------
+      # ---------------- PREPARE EC2 STRUCTURE ----------------
       - name: Prepare EC2 Directories
         run: |
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            mkdir -p ${{ secrets.APP_DIR }}/api-gateway
-            mkdir -p ${{ secrets.APP_DIR }}/services/patient-service
-            mkdir -p ${{ secrets.APP_DIR }}/services/staff-service
+            mkdir -p ${{ secrets.APP_DIR }}/api-gateway/dist
+            mkdir -p ${{ secrets.APP_DIR }}/services/patient-service/dist
+            mkdir -p ${{ secrets.APP_DIR }}/services/staff-service/dist
+
             mkdir -p ${{ secrets.APP_DIR }}/frontend
+            mkdir -p ${{ secrets.APP_DIR }}/frontend/.next
+            mkdir -p ${{ secrets.APP_DIR }}/frontend/.next/static
+            mkdir -p ${{ secrets.APP_DIR }}/frontend/public
           EOF
 
       # ---------------- BACKEND DEPLOY ----------------
@@ -69,17 +73,20 @@ jobs:
       # ---------------- FRONTEND DEPLOY ----------------
       - name: Deploy Frontend Standalone
         run: |
+          # 1️⃣ Standalone server bundle
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
 
-          rsync -avz \
+          # 2️⃣ Static assets
+          rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/static/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/static/
 
-          rsync -avz \
+          # 3️⃣ Public folder
+          rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/public/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
