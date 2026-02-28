@@ -1,4 +1,4 @@
-import baseLogger from '../../services/shared/src/logger';
+import baseLogger from '@h-os/shared';
 
 const logger = baseLogger.child({
   service: 'api-gateway',

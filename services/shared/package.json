@@ -1,0 +1,9 @@
+{
+  "name": "@h-os/shared",
+  "version": "1.0.0",
+  "main": "dist/logger.js",
+  "types": "dist/logger.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}

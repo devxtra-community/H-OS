@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { error } from 'node:console';
 
-console.log('JWT_SECRET in gateway:', process.env.JWT_SECRET);
+// console.log('JWT_SECRET in gateway:', process.env.JWT_SECRET);
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -25,24 +25,17 @@ export function authenticate(
 ) {
   const authHeader = req.headers.authorization;
 
-  console.log('AUTH HEADER:', authHeader);
-
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const token = authHeader.split(' ')[1];
 
-  console.log('TOKEN LENGTH:', token.length);
-  console.log('TOKEN PREVIEW:', token.slice(0, 20));
-
   try {
     const payload = jwt.verify(
       token,
       process.env.JWT_SECRET!
     ) as AuthenticatedRequest['user'];
-
-    console.log('JWT PAYLOAD:', payload);
 
     req.user = payload;
     next();
