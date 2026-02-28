@@ -21,12 +21,14 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      # ---------------- INSTALL + BUILD ----------------
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build workspace
         run: pnpm -r run build
 
+      # ---------------- SSH SETUP ----------------
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -34,21 +36,16 @@ jobs:
           chmod 600 ~/.ssh/ec2.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # ---------------- PREPARE EC2 STRUCTURE ----------------
-      - name: Prepare EC2 Directories
+      # ---------------- PREPARE BACKEND DIRS ----------------
+      - name: Prepare Backend Directories
         run: |
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             mkdir -p ${{ secrets.APP_DIR }}/api-gateway/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/patient-service/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/staff-service/dist
-
-            mkdir -p ${{ secrets.APP_DIR }}/frontend
-            mkdir -p ${{ secrets.APP_DIR }}/frontend/.next
-            mkdir -p ${{ secrets.APP_DIR }}/frontend/.next/static
-            mkdir -p ${{ secrets.APP_DIR }}/frontend/public
           EOF
 
-      # ---------------- BACKEND DEPLOY ----------------
+      # ---------------- DEPLOY BACKEND ----------------
       - name: Deploy API Gateway
         run: |
           rsync -avz --delete \
@@ -70,26 +67,32 @@ jobs:
             services/staff-service/dist/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/services/staff-service/dist/
 
-      # ---------------- FRONTEND DEPLOY ----------------
-      - name: Deploy Frontend Standalone
+      # ---------------- DEPLOY FRONTEND ----------------
+      - name: Deploy Frontend (Standalone Clean)
         run: |
-          # Standalone server bundle
-          rsync -avz --delete \
+          # Clean old frontend completely
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            rm -rf ${{ secrets.APP_DIR }}/frontend
+            mkdir -p ${{ secrets.APP_DIR }}/frontend
+          EOF
+
+          # 1️⃣ Copy standalone server bundle
+          rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
 
-          # Static assets
-          rsync -avz --delete \
+          # 2️⃣ Copy static assets
+          rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/.next/static/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/static/
+            frontend/.next/static \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/
 
-          # Public assets
-          rsync -avz --delete \
+          # 3️⃣ Copy public assets
+          rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/public/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
+            frontend/public \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
 
       # ---------------- RESTART SERVICES ----------------
       - name: Restart Services
