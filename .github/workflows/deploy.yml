@@ -61,7 +61,7 @@ jobs:
 
             cd ${{ secrets.APP_DIR }}
 
-            pnpm install --prod --frozen-lockfile --ignore-scripts
+            CI=true pnpm install --prod --frozen-lockfile --ignore-scripts --force
 
             pm2 reload api-gateway || pm2 start api-gateway/dist/server.js --name api-gateway
             pm2 reload patient-service || pm2 start services/patient-service/dist/server.js --name patient-service
