@@ -1,4 +1,4 @@
-name: Deploy Microservices (Artifact Mode)
+name: Deploy Microservices (Lean Artifact Mode)
 
 on:
   push:
@@ -21,15 +21,12 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      # Install full workspace deps
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Build everything
       - name: Build workspace
         run: pnpm -r run build
 
-      # SSH setup
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -37,22 +34,42 @@ jobs:
           chmod 600 ~/.ssh/ec2.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # Deploy full production bundle
-      - name: Deploy to EC2
+      # ---------------- BACKEND DEPLOY ----------------
+      - name: Deploy Backend
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            api-gateway \
-            services \
-            frontend/.next \
-            frontend/public \
-            package.json \
-            pnpm-lock.yaml \
-            pnpm-workspace.yaml \
+            api-gateway/dist \
+            services/patient-service/dist \
+            services/staff-service/dist \
+            api-gateway/package.json \
+            services/patient-service/package.json \
+            services/staff-service/package.json \
             node_modules \
+            pnpm-lock.yaml \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/
 
-      # Restart services
+      # ---------------- FRONTEND DEPLOY ----------------
+      - name: Deploy Frontend Standalone
+        run: |
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "mkdir -p ${{ secrets.APP_DIR }}/frontend"
+
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            frontend/.next/standalone/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
+
+          rsync -avz \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            frontend/.next/static/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/static/
+
+          rsync -avz \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            frontend/public/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
+
       - name: Restart Services
         run: |
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
@@ -63,7 +80,7 @@ jobs:
             pm2 reload staff-service || pm2 start services/staff-service/dist/server.js --name staff-service
 
             cd frontend
-            pm2 reload frontend || PORT=3000 pm2 start .next/standalone/frontend/server.js --name frontend
+            pm2 reload frontend || PORT=3000 pm2 start server.js --name frontend
 
             pm2 save
           EOF
