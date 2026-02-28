@@ -1,4 +1,4 @@
-name: Deploy Microservices to EC2
+name: Deploy Microservices (Artifact Mode)
 
 on:
   push:
@@ -21,13 +21,19 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      # Install full workspace deps
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all services
+      # Build everything
+      - name: Build workspace
         run: pnpm -r run build
 
-      # ---------- SSH SETUP ----------
+      # Remove dev dependencies
+      - name: Prune dev dependencies
+        run: pnpm prune --prod
+
+      # SSH setup
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -35,72 +41,33 @@ jobs:
           chmod 600 ~/.ssh/ec2.pem
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # ---------- DEPLOY BACKEND ----------
-      - name: Deploy Backend Services
+      # Deploy full production bundle
+      - name: Deploy to EC2
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            api-gateway/dist \
-            services/patient-service/dist \
-            services/staff-service/dist \
-            services/shared/dist \
-            api-gateway/package.json \
-            services/patient-service/package.json \
-            services/staff-service/package.json \
-            pnpm-workspace.yaml \
+            api-gateway \
+            services \
+            frontend/.next \
+            frontend/public \
             package.json \
             pnpm-lock.yaml \
+            pnpm-workspace.yaml \
+            node_modules \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/
 
-      - name: Install production dependencies & reload backend
+      # Restart services
+      - name: Restart Services
         run: |
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            export NVM_DIR="$HOME/.nvm"
-            source "$NVM_DIR/nvm.sh"
-
             cd ${{ secrets.APP_DIR }}
-
-            CI=true pnpm install --prod --frozen-lockfile --ignore-scripts --force
 
             pm2 reload api-gateway || pm2 start api-gateway/dist/server.js --name api-gateway
             pm2 reload patient-service || pm2 start services/patient-service/dist/server.js --name patient-service
             pm2 reload staff-service || pm2 start services/staff-service/dist/server.js --name staff-service
 
-            pm2 save
-          EOF
-
-      # ---------- DEPLOY FRONTEND ----------
-      - name: Deploy Frontend
-        run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "mkdir -p ${{ secrets.APP_DIR }}/frontend-deploy/frontend/.next/static ${{ secrets.APP_DIR }}/frontend-deploy/frontend/public"
-
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/.next/standalone/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend-deploy/
-
-          rsync -avz \
-            -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/public/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend-deploy/frontend/public/
-
-          rsync -avz \
-            -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/.next/static/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend-deploy/frontend/.next/static/
-
-      - name: Restart Frontend
-        run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            export NVM_DIR="$HOME/.nvm"
-            source "$NVM_DIR/nvm.sh"
-
-            cd ${{ secrets.APP_DIR }}/frontend-deploy/frontend
-
-            pm2 reload frontend || PORT=3000 pm2 start server.js --name frontend
+            cd frontend
+            pm2 reload frontend || PORT=3000 pm2 start .next/standalone/frontend/server.js --name frontend
 
             pm2 save
           EOF
