@@ -1,4 +1,4 @@
-name: Deploy Microservices (Lean Artifact Mode)
+name: Deploy Microservices
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       # ---------------- PREPARE BACKEND DIRS ----------------
       - name: Prepare Backend Directories
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             mkdir -p ${{ secrets.APP_DIR }}/api-gateway/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/patient-service/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/staff-service/dist
@@ -71,25 +71,19 @@ jobs:
       - name: Deploy Frontend (Next Standalone)
         run: |
 
-          # Clean previous frontend
+          # Clean and prepare frontend directories
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             rm -rf ${{ secrets.APP_DIR }}/frontend
             mkdir -p ${{ secrets.APP_DIR }}/frontend
+            mkdir -p ${{ secrets.APP_DIR }}/frontend/.next/static
+            mkdir -p ${{ secrets.APP_DIR }}/frontend/public
           EOF
 
-          # Copy standalone bundle
+          # Copy standalone server bundle
           rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
-
-          # Fix nested Next standalone structure
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            if [ -d "${{ secrets.APP_DIR }}/frontend/frontend" ]; then
-              mv ${{ secrets.APP_DIR }}/frontend/frontend/* ${{ secrets.APP_DIR }}/frontend/
-              rm -rf ${{ secrets.APP_DIR }}/frontend/frontend
-            fi
-          EOF
 
           # Copy Next static assets
           rsync -avz \
@@ -102,6 +96,14 @@ jobs:
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/public/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
+
+          # Fix nested standalone structure
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            if [ -d "${{ secrets.APP_DIR }}/frontend/frontend" ]; then
+              rsync -a ${{ secrets.APP_DIR }}/frontend/frontend/ ${{ secrets.APP_DIR }}/frontend/
+              rm -rf ${{ secrets.APP_DIR }}/frontend/frontend
+            fi
+          EOF
 
       # ---------------- RESTART SERVICES ----------------
       - name: Restart Services
@@ -121,4 +123,5 @@ jobs:
             pm2 reload frontend || PORT=3000 pm2 start server.js --name frontend
 
             pm2 save
+
           EOF
