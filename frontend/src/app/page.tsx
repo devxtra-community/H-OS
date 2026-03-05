@@ -19,7 +19,7 @@ export default function HomePage() {
         <div className="space-y-4">
           <button
             onClick={() => router.push('/login')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
+            className="w-full bg-green-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
           >
             Patient Login
           </button>
