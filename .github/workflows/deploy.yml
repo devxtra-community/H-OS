@@ -39,7 +39,7 @@ jobs:
       # ---------------- PREPARE BACKEND DIRS ----------------
       - name: Prepare Backend Directories
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             mkdir -p ${{ secrets.APP_DIR }}/api-gateway/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/patient-service/dist
             mkdir -p ${{ secrets.APP_DIR }}/services/staff-service/dist
@@ -68,39 +68,48 @@ jobs:
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/services/staff-service/dist/
 
       # ---------------- DEPLOY FRONTEND ----------------
-      - name: Deploy Frontend (Standalone Clean)
+      - name: Deploy Frontend (Next Standalone)
         run: |
-          # Clean old frontend completely
+
+          # Clean previous frontend
           ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             rm -rf ${{ secrets.APP_DIR }}/frontend
             mkdir -p ${{ secrets.APP_DIR }}/frontend
           EOF
 
-          # 1️⃣ Copy standalone server bundle
+          # Copy standalone bundle
           rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
             frontend/.next/standalone/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
 
-          # 2️⃣ Copy static assets
-          rsync -avz \
-            -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/.next/static \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/
+          # Fix nested Next standalone structure
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            if [ -d "${{ secrets.APP_DIR }}/frontend/frontend" ]; then
+              mv ${{ secrets.APP_DIR }}/frontend/frontend/* ${{ secrets.APP_DIR }}/frontend/
+              rm -rf ${{ secrets.APP_DIR }}/frontend/frontend
+            fi
+          EOF
 
-          # 3️⃣ Copy public assets
+          # Copy Next static assets
           rsync -avz \
             -e "ssh -i ~/.ssh/ec2.pem" \
-            frontend/public \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/
+            frontend/.next/static/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/.next/static/
+
+          # Copy public assets
+          rsync -avz \
+            -e "ssh -i ~/.ssh/ec2.pem" \
+            frontend/public/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.APP_DIR }}/frontend/public/
 
       # ---------------- RESTART SERVICES ----------------
       - name: Restart Services
         run: |
-          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            # Load NVM so pm2 is available
-            export NVM_DIR="\$HOME/.nvm"
-            [ -s "\$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"
+          ssh -i ~/.ssh/ec2.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
             cd ${{ secrets.APP_DIR }}
 
