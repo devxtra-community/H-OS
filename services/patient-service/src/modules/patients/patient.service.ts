@@ -1,6 +1,7 @@
 import { pool } from '../../db';
 import crypto from 'crypto';
 import { CreatePatientDTO, UpdatePatientDTO } from './patient.types';
+import * as profileRepo from './patient.profile.repository';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -289,6 +290,13 @@ class PatientService {
     await pool.query(`UPDATE patients SET is_active = false WHERE id = $1`, [
       id,
     ]);
+  }
+  async getMyProfile(patientId: string) {
+    return profileRepo.getPatientProfile(patientId);
+  }
+
+  async updateMyProfile(patientId: string, data: any) {
+    return profileRepo.upsertPatientProfile(patientId, data);
   }
 }
 

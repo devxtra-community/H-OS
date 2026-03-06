@@ -78,6 +78,38 @@ class PatientController {
       return res.status(500).json({ error: 'Failed to deactivate patient' });
     }
   }
+
+  async getMyProfile(req: Request, res: Response) {
+    try {
+      const patientId = req.headers['x-user-id'] as string;
+
+      const profile = await patientService.getMyProfile(patientId);
+
+      return res.status(200).json(profile);
+    } catch (error) {
+      console.error(error);
+
+      return res.status(500).json({
+        error: 'Failed to fetch profile',
+      });
+    }
+  }
+
+  async updateMyProfile(req: Request, res: Response) {
+    try {
+      const patientId = req.headers['x-user-id'] as string;
+
+      const profile = await patientService.updateMyProfile(patientId, req.body);
+
+      return res.status(200).json(profile);
+    } catch (error) {
+      console.error(error);
+
+      return res.status(500).json({
+        error: 'Failed to update profile',
+      });
+    }
+  }
 }
 
 export const patientController = new PatientController();

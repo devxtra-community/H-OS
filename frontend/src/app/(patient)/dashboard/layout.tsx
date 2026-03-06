@@ -52,6 +52,12 @@ export default function PatientDashboardLayout({
               label="Book Appointment"
               active={pathname === '/dashboard/book'}
             />
+                        <SidebarLink
+              href="/dashboard/profile"
+              label="Patient Profile"
+              active={pathname === '/dashboard/profile'}
+            />
+
 
           </nav>
         </div>
