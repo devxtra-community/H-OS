@@ -1,8 +1,20 @@
-// services/patient-service/src/modules/patients/patient.routes.ts
 import { Router } from 'express';
 import { patientController } from './patient.controller';
 
 const router = Router();
+
+/**
+ * PROFILE ROUTES
+ * MUST BE FIRST
+ */
+
+router.get('/me', (req, res) => patientController.getMyProfile(req, res));
+
+router.patch('/me', (req, res) => patientController.updateMyProfile(req, res));
+
+/**
+ * STANDARD ROUTES
+ */
 
 router.get('/:id', (req, res) => patientController.getPatientById(req, res));
 

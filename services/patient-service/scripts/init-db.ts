@@ -1,7 +1,10 @@
 import { pool } from '../src/db';
 
 async function init() {
-  // Patients table
+  /**
+   * PATIENTS TABLE
+   * Core identity information
+   */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS patients (
       id UUID PRIMARY KEY,
@@ -10,13 +13,53 @@ async function init() {
       dob DATE NOT NULL,
       gender TEXT NOT NULL,
       phone TEXT,
+
       is_active BOOLEAN DEFAULT true,
+
       created_at TIMESTAMP DEFAULT now(),
       updated_at TIMESTAMP DEFAULT now()
     );
   `);
 
-  // Appointments table (Hybrid-ready)
+  /**
+   * PATIENT PROFILES TABLE
+   * Extended medical + personal information
+   */
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS patient_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    patient_id UUID UNIQUE NOT NULL
+      REFERENCES patients(id)
+      ON DELETE CASCADE,
+
+    blood_group TEXT,
+    height_cm INT,
+    weight_kg INT,
+
+    allergies TEXT,
+    chronic_conditions TEXT,
+
+    address_line1 TEXT,
+    address_line2 TEXT,
+    city TEXT,
+    state TEXT,
+    country TEXT,
+    pincode TEXT,
+
+    emergency_contact_name TEXT,
+    emergency_contact_phone TEXT,
+    emergency_contact_relation TEXT,
+
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+  );
+`);
+
+  /**
+   * APPOINTMENTS TABLE
+   * Hybrid queue + appointment system
+   */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS appointments (
       id UUID PRIMARY KEY,
@@ -44,13 +87,15 @@ async function init() {
     );
   `);
 
-  // Prevent double booking
+  /**
+   * PREVENT DOUBLE BOOKING
+   */
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS unique_doctor_slot
     ON appointments (doctor_id, appointment_time);
   `);
 
-  console.log('✅ patients + appointments tables ready');
+  console.log('✅ patients + patient_profiles + appointments tables ready');
   process.exit(0);
 }
 

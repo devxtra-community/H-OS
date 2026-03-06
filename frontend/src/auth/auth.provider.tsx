@@ -24,6 +24,7 @@ type AuthContextType = {
   loginSuccess: (data: {
     accessToken: string;
     patient: Patient;
+    
   }) => void;
   logout: () => void;
 };

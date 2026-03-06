@@ -25,8 +25,18 @@ app.use('/health', healthRoutes);
 app.use('/patients/public', patientAuthProxy);
 
 // PATIENT self routes
-app.use('/patients', authenticate, requirePatientSelf, patientDataProxy);
-
+app.use(
+  '/patients',
+  authenticate,
+  requirePatientSelf,
+  (req: any, _res, next) => {
+    if (req.user?.sub) {
+      req.headers['x-user-id'] = String(req.user.sub);
+    }
+    next();
+  },
+  patientDataProxy
+);
 // STAFF auth
 app.use('/staff/public', staffAuthProxy);
 app.use('/staff', authenticate, staffDataRouter);
