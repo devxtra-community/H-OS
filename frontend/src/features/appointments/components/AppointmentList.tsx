@@ -16,7 +16,7 @@ export default function AppointmentList({ appointments }: Props) {
           <CalendarX size={32} />
         </div>
         <h3 className="text-lg font-bold text-slate-900">No appointments found</h3>
-        <p className="text-slate-500 text-sm mt-1 text-center max-w-[250px]">
+        <p className="text-slate-500 text-sm mt-1 text-center max-w-62.5">
           We couldn't find any scheduled visits in your history.
         </p>
       </div>
@@ -26,7 +26,7 @@ export default function AppointmentList({ appointments }: Props) {
   return (
     <div className="relative">
       {/* Optional: Simple timeline line decoration for desktop */}
-      <div className="hidden lg:block absolute left-[40px] top-0 bottom-0 w-[2px] bg-slate-100 -z-10" />
+      <div className="hidden lg:block absolute left-10 top-0 bottom-0 w-0.5 bg-slate-100 -z-10" />
       
       <div className="space-y-6">
         {appointments.map((appt) => (

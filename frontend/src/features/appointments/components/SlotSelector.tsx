@@ -16,7 +16,7 @@ export default function SlotSelector({
 }: Props) {
   if (!slots.length) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
+      <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-4xl border-2 border-dashed border-slate-200">
         <Clock className="text-slate-300 mb-2" size={24} />
         <p className="text-slate-500 text-sm font-medium">No slots available for this date</p>
       </div>

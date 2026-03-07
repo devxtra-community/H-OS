@@ -95,7 +95,7 @@ export default function ProfileForm() {
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200/60 transition-all duration-300">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="flex items-center gap-6">
-              <div className="h-24 w-24 rounded-[2rem] bg-gradient-to-br from-blue-600 to-indigo-700 shadow-xl shadow-blue-100 flex items-center justify-center text-white text-3xl font-bold">
+              <div className="h-24 w-24 rounded-4xl bg-linear-to-br from-blue-600 to-indigo-700 shadow-xl shadow-blue-100 flex items-center justify-center text-white text-3xl font-bold">
                 {form.name?.charAt(0)}
               </div>
               <div className="space-y-1">
@@ -238,7 +238,7 @@ export default function ProfileForm() {
             {isEditing && (
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-4xl font-bold flex items-center justify-center gap-3 shadow-xl shadow-blue-200 transition-all active:scale-[0.98]"
               >
                 <Save size={22} />
                 SAVE PROFILE
@@ -253,7 +253,7 @@ export default function ProfileForm() {
 
 function StatBox({ label, icon, children }: { label: string, icon: React.ReactNode, children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 hover:bg-white hover:border-slate-200 transition-all duration-300 min-h-[105px] justify-center">
+    <div className="flex flex-col gap-2 p-5 bg-slate-50/50 rounded-4xl border border-slate-100 hover:bg-white hover:border-slate-200 transition-all duration-300 min-h-26.25 justify-center">
       <div className="flex items-center justify-between opacity-80">
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
         {icon}
