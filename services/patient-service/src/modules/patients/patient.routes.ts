@@ -16,6 +16,12 @@ router.put('/profile-image', patientController.updateProfileImage);
 
 router.use('/upload', uploadRoutes);
 
+router.get('/documents', patientController.getDocuments);
+
+router.post('/documents', patientController.saveDocument);
+
+router.delete('/documents', patientController.deleteDocument);
+
 /**
  * STANDARD ROUTES
  */

@@ -2,6 +2,11 @@
 import { Request, Response } from 'express';
 import { patientService } from './patient.service';
 import { CreatePatientDTO, UpdatePatientDTO } from './patient.types';
+import {
+  savePatientDocument,
+  getPatientDocuments,
+  deletePatientDocument,
+} from './patient.documents.repository';
 
 class PatientController {
   /**
@@ -130,6 +135,36 @@ class PatientController {
         error: 'Failed to update profile image',
       });
     }
+  }
+  async saveDocument(req: Request, res: Response) {
+    const patientId = req.headers['x-user-id'] as string;
+
+    const { file_url, file_key, file_name } = req.body;
+
+    const doc = await savePatientDocument(
+      patientId,
+      file_url,
+      file_key,
+      file_name
+    );
+
+    return res.json(doc);
+  }
+  async getDocuments(req: Request, res: Response) {
+    const patientId = req.headers['x-user-id'] as string;
+
+    const docs = await getPatientDocuments(patientId);
+
+    return res.json(docs);
+  }
+  async deleteDocument(req: Request, res: Response) {
+    const patientId = req.headers['x-user-id'] as string;
+
+    const { file_key } = req.body;
+
+    await deletePatientDocument(patientId, file_key);
+
+    return res.json({ success: true });
   }
 }
 

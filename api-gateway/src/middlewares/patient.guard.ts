@@ -19,7 +19,8 @@ export function requirePatientSelf(
   if (
     patientIdFromPath === 'me' ||
     patientIdFromPath === 'upload' ||
-    patientIdFromPath === 'profile-image'
+    patientIdFromPath === 'profile-image' ||
+    patientIdFromPath === 'documents'
   ) {
     return next();
   }
