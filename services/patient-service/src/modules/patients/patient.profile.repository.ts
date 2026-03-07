@@ -7,6 +7,7 @@ export async function getPatientProfile(patientId: string) {
       p.id,
       p.name,
       p.email,
+      p.profile_image,
       p.dob,
       p.gender,
       p.phone,
@@ -104,6 +105,24 @@ export async function upsertPatientProfile(patientId: string, data: any) {
       data.emergency_contact_phone || null,
       data.emergency_contact_relation || null,
     ]
+  );
+
+  return result.rows[0];
+}
+
+export async function updatePatientProfileImage(
+  patientId: string,
+  imageUrl: string
+) {
+  const result = await pool.query(
+    `
+    UPDATE patients
+    SET profile_image = $2,
+        updated_at = now()
+    WHERE id = $1
+    RETURNING profile_image
+    `,
+    [patientId, imageUrl]
   );
 
   return result.rows[0];

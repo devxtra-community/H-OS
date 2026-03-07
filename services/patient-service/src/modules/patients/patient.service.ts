@@ -305,6 +305,10 @@ class PatientService {
     // update profile table
     return profileRepo.upsertPatientProfile(patientId, data);
   }
+
+  async updateProfileImage(patientId: string, imageUrl: string) {
+    return profileRepo.updatePatientProfileImage(patientId, imageUrl);
+  }
 }
 
 export const patientService = new PatientService();
