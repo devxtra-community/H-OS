@@ -268,18 +268,21 @@ class PatientService {
   /**
    * UPDATE PATIENT PROFILE
    */
-  async updatePatient(id: string, data: UpdatePatientDTO) {
+  async updatePatient(id: string, data: any) {
     const result = await pool.query(
       `
-      UPDATE patients
-      SET name = COALESCE($2, name),
-          phone = COALESCE($3, phone),
-          updated_at = now()
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id, data.name, data.phone]
+    UPDATE patients
+    SET
+      name = COALESCE($2, name),
+      phone = COALESCE($3, phone),
+      dob = COALESCE($4, dob),
+      updated_at = now()
+    WHERE id = $1
+    RETURNING *
+    `,
+      [id, data.name || null, data.phone || null, data.dob || null]
     );
+
     return result.rows[0];
   }
 
@@ -296,6 +299,10 @@ class PatientService {
   }
 
   async updateMyProfile(patientId: string, data: any) {
+    // update base patient fields
+    await this.updatePatient(patientId, data);
+
+    // update profile table
     return profileRepo.upsertPatientProfile(patientId, data);
   }
 }
