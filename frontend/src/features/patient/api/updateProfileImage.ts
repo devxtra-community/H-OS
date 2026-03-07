@@ -2,8 +2,11 @@ import { api } from '@/src/lib/api';
 
 export async function uploadProfileImage(file: File) {
   // 1 get signed upload url
-  const { data } = await api.get('/patients/upload/upload-url');
-
+  const { data } = await api.get('/patients/upload/upload-url', {
+    params: {
+      fileType: file.type,
+    },
+  });
   const { uploadUrl, fileUrl } = data;
 
   // 2 upload to s3

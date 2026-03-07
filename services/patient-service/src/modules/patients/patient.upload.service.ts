@@ -1,5 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { randomUUID } from 'crypto';
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -9,13 +11,19 @@ const s3 = new S3Client({
   },
 });
 
-export async function generateUploadUrl(patientId: string) {
-  const key = `patients/${patientId}/${Date.now()}.jpg`;
+export async function generateUploadUrl(
+  patientId: string,
+  fileType: string,
+  type: 'profile' | 'document'
+) {
+  const folder = type === 'profile' ? 'profile' : 'documents';
+
+  const key = `patients/${patientId}/${folder}/${randomUUID()}`;
 
   const command = new PutObjectCommand({
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
-    ContentType: 'image/jpeg',
+    ContentType: fileType,
   });
 
   const url = await getSignedUrl(s3, command, {
@@ -25,5 +33,15 @@ export async function generateUploadUrl(patientId: string) {
   return {
     uploadUrl: url,
     fileUrl: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+    key,
   };
+}
+
+export async function deleteFile(key: string) {
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key,
+  });
+
+  await s3.send(command);
 }
