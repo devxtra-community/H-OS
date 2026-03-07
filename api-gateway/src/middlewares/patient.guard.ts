@@ -10,16 +10,17 @@ export function requirePatientSelf(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const patientIdFromPath = req.path.split('/')[1];
-
-  if (!patientIdFromPath) {
-    return res.status(400).json({ error: 'Invalid patient path' });
-  }
+  const pathParts = req.path.split('/');
+  const patientIdFromPath = pathParts[1];
 
   /**
-   * Allow /patients/me directly
+   * Allow special routes
    */
-  if (patientIdFromPath === 'me') {
+  if (
+    patientIdFromPath === 'me' ||
+    patientIdFromPath === 'upload' ||
+    patientIdFromPath === 'profile-image'
+  ) {
     return next();
   }
 

@@ -110,6 +110,27 @@ class PatientController {
       });
     }
   }
+
+  async updateProfileImage(req: Request, res: Response) {
+    try {
+      const patientId = req.headers['x-user-id'] as string;
+
+      const { profile_image } = req.body;
+
+      const result = await patientService.updateProfileImage(
+        patientId,
+        profile_image
+      );
+
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+
+      return res.status(500).json({
+        error: 'Failed to update profile image',
+      });
+    }
+  }
 }
 
 export const patientController = new PatientController();
