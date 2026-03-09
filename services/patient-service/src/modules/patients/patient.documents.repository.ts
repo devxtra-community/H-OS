@@ -21,7 +21,7 @@ export async function savePatientDocument(
 export async function getPatientDocuments(patientId: string) {
   const result = await pool.query(
     `
-    SELECT file_url, file_key
+    SELECT file_url, file_key, file_name
     FROM patient_documents
     WHERE patient_id=$1
     ORDER BY created_at DESC

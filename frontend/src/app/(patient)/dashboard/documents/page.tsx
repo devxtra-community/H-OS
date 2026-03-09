@@ -1,10 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { uploadPatientDocument } from '../../../../features/patient/api/uploadDocument';
 import { getPatientDocuments } from '../../../../features/patient/api/getDocument';
 import { deletePatientDocument } from '../../../../features/patient/api/deleteDocument';
-import { FileText, Upload, Trash2 } from 'lucide-react';
+
+import {
+  FileText,
+  Upload,
+  Trash2,
+  Image,
+  File,
+  Download
+} from 'lucide-react';
 
 type DocumentType = {
   file_url: string;
@@ -12,16 +20,28 @@ type DocumentType = {
   file_name: string;
 };
 
-export default function DocumentsPage() {
+function getFileIcon(fileName: string) {
 
+  const extension = fileName.split('.').pop()?.toLowerCase();
+
+  if (extension === 'pdf') {
+    return <FileText className="w-6 h-6 text-red-500" />;
+  }
+
+  if (['png', 'jpg', 'jpeg', 'webp'].includes(extension || '')) {
+    return <Image className="w-6 h-6 text-blue-500" />;
+  }
+
+  return <File className="w-6 h-6 text-gray-500" />;
+}
+
+export default function DocumentsPage() {
 
   const [documents, setDocuments] = useState<DocumentType[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  function getFileName(url: string) {
-  return url.split('/').pop();
-}
-  // load documents
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
 
     async function loadDocuments() {
@@ -77,95 +97,109 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-8">
 
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">
-          Documents
-        </h1>
+    <div className="max-w-6xl mx-auto space-y-8">
 
-        <p className="text-slate-500">
-          Upload and manage your medical documents
-        </p>
+      {/* Header */}
+
+      <div className="flex items-center justify-between">
+
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Documents
+          </h1>
+
+          <p className="text-sm text-slate-500 mt-1">
+            Your medical documents and files
+          </p>
+        </div>
+
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition"
+        >
+          <Upload className="w-4 h-4" />
+
+          {uploading ? "Uploading..." : "Upload"}
+
+        </button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleUpload}
+        />
+
       </div>
 
-      {/* Upload Section */}
+      {/* Empty State */}
 
-      <div className="bg-white rounded-2xl p-6 shadow border">
+      {documents.length === 0 && (
 
-        <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 cursor-pointer hover:bg-slate-50">
+        <div className="bg-white rounded-2xl p-10 border text-center text-slate-500">
+          No documents uploaded yet
+        </div>
 
-          <Upload size={30} className="mb-2 text-slate-500" />
+      )}
 
-          <p className="text-slate-700 font-medium">
-            {uploading ? "Uploading..." : "Click to upload document"}
-          </p>
+      {/* Document Grid */}
 
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleUpload}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-        </label>
+        {documents.map((doc, index) => (
 
-      </div>
+          <div
+            key={doc.file_key}
+            className="bg-white rounded-2xl p-5 shadow hover:shadow-lg transition group"
+          >
 
-      {/* Document List */}
+            <div className="flex items-start justify-between mb-4">
 
-      <div className="bg-white rounded-2xl p-6 shadow border">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-100">
+                {getFileIcon(doc.file_name)}
+              </div>
 
-        <h2 className="font-semibold mb-4 text-lg">
-          Uploaded Documents
-        </h2>
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
 
-        {documents.length === 0 && (
-          <p className="text-slate-500">
-            No documents uploaded yet.
-          </p>
-        )}
+                <a
+                  href={doc.file_url}
+                  target="_blank"
+                  className="p-2 rounded-lg hover:bg-slate-100"
+                >
+                  <Download className="w-4 h-4 text-slate-500" />
+                </a>
 
-        <div className="space-y-3">
+                <button
+                  onClick={() => handleDelete(index, doc.file_key)}
+                  className="p-2 rounded-lg hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
 
-          {documents.map((doc, index) => (
-
-            <div
-              key={doc.file_key}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50"
-            >
-
-              <a
-                href={doc.file_url}
-                target="_blank"
-                className="flex items-center gap-3"
-              >
-
-                <FileText size={18} className="text-blue-600" />
-<span className="text-sm font-medium">
-  {getFileName(doc.file_name)}
-</span>
-
-              </a>
-
-              <button
-                onClick={() => handleDelete(index, doc.file_key)}
-                className="text-red-500 flex items-center gap-1 text-sm"
-              >
-
-                <Trash2 size={16} />
-
-                Delete
-
-              </button>
+              </div>
 
             </div>
 
-          ))}
+            <a
+              href={doc.file_url}
+              target="_blank"
+              className="block"
+            >
 
-        </div>
+              <h3 className="font-semibold text-slate-900 text-sm truncate">
+                {doc.file_name}
+              </h3>
+
+            </a>
+
+          </div>
+
+        ))}
 
       </div>
 
     </div>
+
   );
 }
