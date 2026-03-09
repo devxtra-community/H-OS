@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function AppointmentList({ appointments }: Props) {
-  // Enhanced Empty State
+
   if (!appointments.length) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 bg-slate-50/50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
@@ -24,18 +24,32 @@ export default function AppointmentList({ appointments }: Props) {
   }
 
   return (
-    <div className="relative">
-      {/* Optional: Simple timeline line decoration for desktop */}
-      <div className="hidden lg:block absolute left-10 top-0 bottom-0 w-0.5 bg-slate-100 -z-10" />
-      
+    <div className="relative max-w-4xl mx-auto">
+
+      {/* Timeline line */}
+      <div className="absolute left-5.5 top-0 bottom-0 w-0.5 bg-slate-200" />
+
       <div className="space-y-6">
-        {appointments.map((appt) => (
-          <AppointmentCard
+
+        {appointments.map((appt, i) => (
+
+          <div
             key={appt.id}
-            appointment={appt}
-          />
+            className="relative pl-12 animate-fade-in-up"
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+
+            {/* Timeline dot */}
+            <div className="absolute left-2.5 top-6 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow" />
+
+            <AppointmentCard appointment={appt} />
+
+          </div>
+
         ))}
+
       </div>
+
     </div>
   );
 }

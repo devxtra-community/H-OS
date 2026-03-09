@@ -342,7 +342,34 @@ export class AppointmentService {
   }
 
   async getPatientHistory(patientId: string) {
-    return appointmentRepository.getPatientHistory(patientId);
+    const appointments =
+      await appointmentRepository.getPatientHistory(patientId);
+
+    const enriched = await Promise.all(
+      appointments.map(async (appt) => {
+        try {
+          const response = await axios.get(
+            `${process.env.STAFF_SERVICE_URL}/staff/${appt.doctor_id}`
+          );
+
+          const doctor = response.data;
+
+          return {
+            ...appt,
+            doctor_name: doctor.name,
+            department: doctor.department_id,
+          };
+        } catch {
+          return {
+            ...appt,
+            doctor_name: 'Unknown',
+            department: 'Unknown',
+          };
+        }
+      })
+    );
+
+    return enriched;
   }
 
   async rescheduleAppointment(
