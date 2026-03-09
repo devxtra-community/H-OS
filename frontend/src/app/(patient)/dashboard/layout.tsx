@@ -48,7 +48,11 @@ export default function PatientDashboardLayout({
     }
   }, [auth.isRestoring, auth.accessToken, router]);
 
-  if (auth.isRestoring) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (auth.isRestoring) return     <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="relative">
+        <div className="h-16 w-16 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
+      </div>
+    </div>;
   if (!auth.accessToken) return null;
 
   // Safely extract initials
