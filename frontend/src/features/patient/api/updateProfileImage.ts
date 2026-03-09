@@ -5,8 +5,10 @@ export async function uploadProfileImage(file: File) {
   const { data } = await api.get('/patients/upload/upload-url', {
     params: {
       fileType: file.type,
+      type: 'profile', // ✅ REQUIRED
     },
   });
+
   const { uploadUrl, fileUrl } = data;
 
   // 2 upload to s3
