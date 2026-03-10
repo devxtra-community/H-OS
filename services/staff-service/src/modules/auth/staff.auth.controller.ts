@@ -105,7 +105,7 @@ export class StaffAuthController {
       res.cookie('staffRefreshToken', refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
+        sameSite: 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -207,7 +207,7 @@ export class StaffAuthController {
       res.cookie('staffRefreshToken', newRefreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
+        sameSite: 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -247,7 +247,7 @@ export class StaffAuthController {
       res.clearCookie('staffRefreshToken', {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
+        sameSite: 'lax',
         path: '/',
       });
 
