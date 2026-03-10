@@ -1,6 +1,7 @@
 import { pool } from '../../db';
 import crypto from 'crypto';
 import { CreatePatientDTO, UpdatePatientDTO } from './patient.types';
+import * as profileRepo from './patient.profile.repository';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -267,18 +268,21 @@ class PatientService {
   /**
    * UPDATE PATIENT PROFILE
    */
-  async updatePatient(id: string, data: UpdatePatientDTO) {
+  async updatePatient(id: string, data: any) {
     const result = await pool.query(
       `
-      UPDATE patients
-      SET name = COALESCE($2, name),
-          phone = COALESCE($3, phone),
-          updated_at = now()
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id, data.name, data.phone]
+    UPDATE patients
+    SET
+      name = COALESCE($2, name),
+      phone = COALESCE($3, phone),
+      dob = COALESCE($4, dob),
+      updated_at = now()
+    WHERE id = $1
+    RETURNING *
+    `,
+      [id, data.name || null, data.phone || null, data.dob || null]
     );
+
     return result.rows[0];
   }
 
@@ -289,6 +293,21 @@ class PatientService {
     await pool.query(`UPDATE patients SET is_active = false WHERE id = $1`, [
       id,
     ]);
+  }
+  async getMyProfile(patientId: string) {
+    return profileRepo.getPatientProfile(patientId);
+  }
+
+  async updateMyProfile(patientId: string, data: any) {
+    // update base patient fields
+    await this.updatePatient(patientId, data);
+
+    // update profile table
+    return profileRepo.upsertPatientProfile(patientId, data);
+  }
+
+  async updateProfileImage(patientId: string, imageUrl: string) {
+    return profileRepo.updatePatientProfileImage(patientId, imageUrl);
   }
 }
 

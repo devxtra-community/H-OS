@@ -10,13 +10,24 @@ export function requirePatientSelf(
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // URL will be /:id after /patients is stripped
-  const patientIdFromPath = req.path.split('/')[1];
+  const pathParts = req.path.split('/');
+  const patientIdFromPath = pathParts[1];
 
-  if (!patientIdFromPath) {
-    return res.status(400).json({ error: 'Invalid patient path' });
+  /**
+   * Allow special routes
+   */
+  if (
+    patientIdFromPath === 'me' ||
+    patientIdFromPath === 'upload' ||
+    patientIdFromPath === 'profile-image' ||
+    patientIdFromPath === 'documents'
+  ) {
+    return next();
   }
 
+  /**
+   * Protect /patients/:id
+   */
   if (req.user.sub !== patientIdFromPath) {
     return res.status(403).json({ error: 'Access denied' });
   }

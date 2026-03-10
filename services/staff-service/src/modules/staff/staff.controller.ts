@@ -144,13 +144,20 @@ export class StaffController {
 
       const result = await pool.query(
         `
-      SELECT id, name, job_title
-      FROM staff
-      WHERE department_id = $1
-      AND role = 'DOCTOR'
-      AND is_active = true
-      ORDER BY name
-      `,
+  SELECT DISTINCT ON (s.id)
+    s.id,
+    s.name,
+    s.job_title,
+    a.start_time,
+    a.end_time
+  FROM staff s
+  LEFT JOIN doctor_availability a
+    ON s.id = a.doctor_id
+  WHERE s.department_id = $1
+  AND s.role = 'DOCTOR'
+  AND s.is_active = true
+  ORDER BY s.id
+  `,
         [departmentId]
       );
 
