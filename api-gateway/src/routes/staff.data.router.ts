@@ -4,10 +4,13 @@ import { staffDataProxy } from '../proxy/staff.data.proxy';
 
 const router = express.Router();
 
-// 🔒 ADMIN ONLY: create staff
+// 🔒 ADMIN ONLY
 router.post('/', requirePermission('CREATE_STAFF'), staffDataProxy);
 
-// everything else just passes through
+// 🔒 BED MANAGEMENT
+router.use('/beds', requirePermission('MANAGE_BEDS'), staffDataProxy);
+
+// everything else
 router.use(staffDataProxy);
 
 export default router;

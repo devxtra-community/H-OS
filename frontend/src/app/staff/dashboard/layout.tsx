@@ -70,6 +70,26 @@ export default function StaffLayout({
               label="Manage Availability"
               active={pathname === '/staff/dashboard/availability'}
             />
+            <SidebarLink
+            href='/staff/dashboard/beds'
+            label='Beds'
+            active={pathname === '/staff/dashboard/beds'}
+            />
+            <SidebarLink
+            href='/staff/dashboard/admissions'
+            label='Admissions'
+            active={pathname === '/staff/dashboard/admissions'}
+            />
+            <SidebarLink
+            href='/staff/dashboard/discharge'
+            label='Discharge'
+            active={pathname === '/staff/dashboard/Discharge'}
+            />
+            <SidebarLink
+            href='/staff/dashboard/patients'
+            label='Patients'
+            active={pathname === '/staff/dashboard/patients'}
+            />
           </nav>
         </div>
 

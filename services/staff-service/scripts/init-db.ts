@@ -1,4 +1,4 @@
-import { pool } from '../src/db.ts';
+import { pool } from '../src/db';
 import { randomUUID } from 'crypto';
 
 async function init() {
@@ -38,7 +38,7 @@ async function init() {
   }
 
   /**
-   * 2️⃣ Staff Table (FOREIGN KEY version)
+   * 2️⃣ Staff Table
    */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS staff (
@@ -71,7 +71,72 @@ async function init() {
     );
   `);
 
-  console.log('✅ departments + staff + doctor_availability tables ready');
+  /**
+   * 4️⃣ Wards Table
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS wards (
+      id UUID PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT now()
+    );
+  `);
+
+  /**
+   * 5️⃣ Rooms Table
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rooms (
+      id UUID PRIMARY KEY,
+      ward_id UUID REFERENCES wards(id) ON DELETE CASCADE,
+      room_number TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT now(),
+      UNIQUE (ward_id, room_number)
+    );
+  `);
+
+  /**
+   * 6️⃣ Beds Table
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS beds (
+      id UUID PRIMARY KEY,
+      room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+      bed_number TEXT NOT NULL,
+      bed_type TEXT DEFAULT 'GENERAL',
+      status TEXT DEFAULT 'AVAILABLE',
+      created_at TIMESTAMP DEFAULT now(),
+      UNIQUE (room_id, bed_number)
+    );
+  `);
+
+  /**
+   * 7️⃣ Bed Assignments Table
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bed_assignments (
+      id UUID PRIMARY KEY,
+      bed_id UUID REFERENCES beds(id) ON DELETE CASCADE,
+      patient_id UUID NOT NULL,
+      assigned_at TIMESTAMP DEFAULT now(),
+      discharged_at TIMESTAMP
+    );
+  `);
+
+  /**
+   * 8️⃣ Index for fast lookup of active assignments
+   */
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_active_bed_assignments
+    ON bed_assignments (bed_id)
+    WHERE discharged_at IS NULL;
+  `);
+
+  console.log(
+    '✅ departments + staff + doctor_availability + bed management tables ready'
+  );
+
   process.exit(0);
 }
 

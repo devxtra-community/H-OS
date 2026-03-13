@@ -9,8 +9,10 @@ import {
   useCheckInAppointment,
 } from '../../../../features/appointments/hooks/useStaffActions';
 import { useEmergency } from '../../../../features/appointments/hooks/useEmergency';
+import { useRequestAdmission } from '../../../../features/admissions/hooks/useRequestAdmission';
 
 export default function QueuePage() {
+
   const { auth } = useStaffAuth();
   const doctorId = auth.staff?.id;
 
@@ -26,6 +28,7 @@ export default function QueuePage() {
   const completeMutation = useCompleteAppointment();
   const checkInMutation = useCheckInAppointment();
   const emergencyMutation = useEmergency(doctorId);
+  const admitMutation = useRequestAdmission();
 
   if (isLoading) return <p>Loading queue...</p>;
   if (!data) return <p>No queue found.</p>;
@@ -69,14 +72,17 @@ export default function QueuePage() {
                 : 'bg-white'
             }`}
           >
+
             <p className="font-semibold">
               Patient ID: {item.patient_id}
             </p>
+
             <p>Status: {item.status}</p>
             <p>Position: {item.position}</p>
 
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 flex-wrap">
 
+              {/* Check In */}
               {item.status === 'SCHEDULED' && (
                 <button
                   onClick={() => checkInMutation.mutate(item.id)}
@@ -86,6 +92,7 @@ export default function QueuePage() {
                 </button>
               )}
 
+              {/* Start Consultation */}
               {item.status === 'CHECKED_IN' && !someoneInProgress && (
                 <button
                   onClick={() => startMutation.mutate(item.id)}
@@ -95,16 +102,37 @@ export default function QueuePage() {
                 </button>
               )}
 
+              {/* Complete Consultation */}
               {item.status === 'IN_PROGRESS' && (
-                <button
-                  onClick={() => completeMutation.mutate(item.id)}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm"
-                >
-                  Complete
-                </button>
+                <>
+                  <button
+                    onClick={() => completeMutation.mutate(item.id)}
+                    className="px-3 py-1 bg-green-600 text-white rounded text-sm"
+                  >
+                    Complete
+                  </button>
+
+                  {/* 🏥 Admit Patient */}
+                  <button
+                    disabled={admitMutation.isPending}
+                    onClick={() =>
+                      admitMutation.mutate({
+                        patientId: item.patient_id,
+                        doctorId: doctorId,
+                        departmentId: auth.staff?.department_id
+                      })
+                    }
+                    className="px-3 py-1 bg-red-600 text-white rounded text-sm disabled:opacity-50"
+                  >
+                    {admitMutation.isPending
+                      ? 'Admitting...'
+                      : 'Admit Patient'}
+                  </button>
+                </>
               )}
 
             </div>
+
           </div>
         ))}
       </div>
@@ -150,6 +178,7 @@ export default function QueuePage() {
             </div>
 
           </div>
+
         </div>
       )}
 

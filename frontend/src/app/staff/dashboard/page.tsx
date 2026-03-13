@@ -3,6 +3,7 @@
 import { useStaffAuth } from '../../../staff/auth/staff.auth.provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function StaffDashboardPage() {
   const { auth, logout } = useStaffAuth();
@@ -48,6 +49,8 @@ export default function StaffDashboardPage() {
         <p><strong>Role:</strong> {auth.staff?.role}</p>
         <p><strong>Job Title:</strong> {auth.staff?.job_title}</p>
       </div>
+
+      
     </div>
   );
 }
