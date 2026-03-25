@@ -19,7 +19,7 @@ export class AdmissionController {
   }
 
   async getPending(req: Request, res: Response) {
-    const admissions = await admissionRepository.getPendingAdmissions();
+    const admissions = await admissionService.getPendingAdmissions();
 
     res.json(admissions);
   }

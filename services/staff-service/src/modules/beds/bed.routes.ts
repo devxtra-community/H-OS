@@ -17,4 +17,9 @@ router.post('/assign', controller.assignBed.bind(controller));
 
 router.post('/discharge', controller.dischargePatient.bind(controller));
 
+router.post(
+  '/active-assignments',
+  controller.getActiveAssignments.bind(controller)
+);
+
 export default router;

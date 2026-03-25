@@ -106,6 +106,23 @@ class StaffService {
     return result.rows[0] || null;
   }
 
+  async getBulkBasicInfo(staffIds: string[]) {
+    if (!staffIds || staffIds.length === 0) return [];
+    const result = await pool.query(
+      `
+      SELECT 
+        s.id,
+        s.name AS doctor_name,
+        d.name AS department_name
+      FROM staff s
+      LEFT JOIN departments d ON s.department_id = d.id
+      WHERE s.id = ANY($1::uuid[])
+      `,
+      [staffIds]
+    );
+    return result.rows;
+  }
+
   async updateStaff(id: string, data: any) {
     const result = await pool.query(
       `

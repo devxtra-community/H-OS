@@ -23,10 +23,11 @@ class AdmissionRepository {
   async getPendingAdmissions() {
     const result = await pool.query(
       `
-      SELECT *
-      FROM admissions
-      WHERE status='REQUESTED'
-      ORDER BY created_at ASC
+      SELECT a.*, p.name AS patient_name
+      FROM admissions a
+      LEFT JOIN patients p ON p.id = a.patient_id
+      WHERE a.status='REQUESTED'
+      ORDER BY a.created_at ASC
       `
     );
 
@@ -72,16 +73,18 @@ class AdmissionRepository {
     const result = await pool.query(
       `
     SELECT
-      id,
-      patient_id,
-      doctor_id,
-      department_id,
-      status,
-      created_at
-    FROM admissions
-    WHERE doctor_id = $1
-    AND status = 'ADMITTED'
-    ORDER BY created_at DESC
+      a.id,
+      a.patient_id,
+      p.name AS patient_name,
+      a.doctor_id,
+      a.department_id,
+      a.status,
+      a.created_at
+    FROM admissions a
+    LEFT JOIN patients p ON p.id = a.patient_id
+    WHERE a.doctor_id = $1
+    AND a.status = 'ADMITTED'
+    ORDER BY a.created_at DESC
     `,
       [doctorId]
     );
@@ -92,13 +95,15 @@ class AdmissionRepository {
     const result = await pool.query(
       `
     SELECT
-      id,
-      patient_id,
-      doctor_id
-    FROM admissions
-    WHERE discharge_requested = true
-    AND status = 'ADMITTED'
-    ORDER BY created_at ASC
+      a.id,
+      a.patient_id,
+      p.name AS patient_name,
+      a.doctor_id
+    FROM admissions a
+    LEFT JOIN patients p ON p.id = a.patient_id
+    WHERE a.discharge_requested = true
+    AND a.status = 'ADMITTED'
+    ORDER BY a.created_at ASC
     `
     );
 

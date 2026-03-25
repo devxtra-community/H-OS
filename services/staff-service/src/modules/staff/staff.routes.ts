@@ -19,6 +19,8 @@ router.post('/', controller.createStaff.bind(controller));
 
 router.get('/by-id/:id', controller.getStaffById.bind(controller));
 
+router.post('/bulk-basic-info', controller.getBulkBasicInfo.bind(controller));
+
 router.put('/by-id/:id', controller.updateStaff.bind(controller));
 
 router.delete('/by-id/:id', controller.deactivateStaff.bind(controller));

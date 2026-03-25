@@ -132,6 +132,29 @@ class BedsService {
     );
   }
 
+  async getActiveAssignments(patientIds: string[]) {
+    if (!patientIds || patientIds.length === 0) return [];
+
+    const result = await pool.query(
+      `
+      SELECT 
+        ba.patient_id,
+        b.bed_number,
+        r.room_number,
+        w.name AS ward
+      FROM bed_assignments ba
+      JOIN beds b ON ba.bed_id = b.id
+      JOIN rooms r ON b.room_id = r.id
+      JOIN wards w ON r.ward_id = w.id
+      WHERE ba.patient_id = ANY($1::uuid[])
+      AND ba.discharged_at IS NULL
+      `,
+      [patientIds]
+    );
+
+    return result.rows;
+  }
+
   async getWards() {
     const result = await pool.query(`
     SELECT id, name

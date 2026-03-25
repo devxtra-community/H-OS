@@ -57,6 +57,18 @@ export class BedsController {
     });
   }
 
+  async getActiveAssignments(req: Request, res: Response) {
+    const { patientIds } = req.body;
+
+    if (!Array.isArray(patientIds) || patientIds.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const assignments = await bedsService.getActiveAssignments(patientIds);
+    res.json(assignments);
+  }
+
   async getWards(req: Request, res: Response) {
     const wards = await bedsService.getWards();
     res.json(wards);

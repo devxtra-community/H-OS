@@ -341,6 +341,43 @@ export class AppointmentService {
 
     return appointment;
   }
+  async getMyStatus(patientId: string) {
+    const today = new Date().toLocaleDateString('en-CA');
+
+    const myAppointment =
+      await appointmentRepository.getPatientActiveAppointment(patientId, today);
+
+    if (!myAppointment) {
+      return null;
+    }
+
+    // get full doctor queue
+    const doctorQueue = await this.getDoctorQueueForDay(
+      myAppointment.doctor_id,
+      today
+    );
+
+    const myQueueItem = doctorQueue.queue.find(
+      (q) => q.id === myAppointment.id
+    );
+
+    if (!myQueueItem) {
+      return null;
+    }
+
+    return {
+      appointment_id: myAppointment.id,
+      doctor_id: myAppointment.doctor_id,
+      status: myQueueItem.status,
+      position: myQueueItem.position,
+      patients_ahead: myQueueItem.patients_ahead,
+      estimated_start_time: myQueueItem.estimated_start_time,
+      estimated_end_time: myQueueItem.estimated_end_time,
+      delay_minutes: myQueueItem.delay_minutes,
+      doctor_delay_minutes: doctorQueue.doctor_status.doctor_delay_minutes,
+      doctor_current_patient: doctorQueue.doctor_status.current_patient,
+    };
+  }
 }
 
 export const appointmentService = new AppointmentService();
