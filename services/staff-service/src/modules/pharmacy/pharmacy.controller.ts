@@ -4,7 +4,7 @@ import { pharmacyService } from './pharmacy.service';
 export class PharmacyController {
   async createPrescription(req: Request, res: Response) {
     try {
-      const doctorId = req.headers['x-user-id'] as string;
+      const doctorId = String(req.headers['x-user-id']);
       const { patientId, patientName, items } = req.body;
       const result = await pharmacyService.createPrescription({
         patientId,
@@ -29,8 +29,8 @@ export class PharmacyController {
 
   async dispense(req: Request, res: Response) {
     try {
-      const staffId = req.headers['x-user-id'] as string;
-      const { id } = req.params;
+      const staffId = String(req.headers['x-user-id']);
+      const id = String(req.params.id);
       const result = await pharmacyService.dispense(id, staffId);
       res.json(result);
     } catch (e: any) {
