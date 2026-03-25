@@ -133,8 +133,84 @@ async function init() {
     WHERE discharged_at IS NULL;
   `);
 
+  /**
+   * 9️⃣ Inventory Tables
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS inventory_items (
+      id UUID PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      category TEXT NOT NULL,
+      quantity INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT now()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS inventory_transactions (
+      id UUID PRIMARY KEY,
+      item_id UUID REFERENCES inventory_items(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      quantity INT NOT NULL,
+      staff_id UUID REFERENCES staff(id) ON DELETE SET NULL,
+      patient_id UUID,
+      timestamp TIMESTAMP DEFAULT now()
+    );
+  `);
+
+  /**
+   * 10️⃣ Pharmacy Tables
+   */
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS prescriptions (
+      id UUID PRIMARY KEY,
+      patient_id UUID NOT NULL,
+      patient_name TEXT,
+      doctor_id UUID REFERENCES staff(id) ON DELETE CASCADE,
+      status TEXT DEFAULT 'PENDING',
+      created_at TIMESTAMP DEFAULT now()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS prescription_items (
+      id UUID PRIMARY KEY,
+      prescription_id UUID REFERENCES prescriptions(id) ON DELETE CASCADE,
+      item_id UUID REFERENCES inventory_items(id) ON DELETE CASCADE,
+      quantity INT NOT NULL,
+      instructions TEXT
+    );
+  `);
+
+  // Ensure instructions column exists if table was created previously
+  await pool.query(`
+    ALTER TABLE prescription_items ADD COLUMN IF NOT EXISTS instructions TEXT;
+  `);
+
+  /**
+   * Seed default medicines
+   */
+  const defaultMedicines = [
+    { name: 'Paracetamol 500mg', category: 'MEDICINE', quantity: 500 },
+    { name: 'Amoxicillin 250mg', category: 'MEDICINE', quantity: 200 },
+    { name: 'Ibuprofen 400mg', category: 'MEDICINE', quantity: 300 },
+    { name: 'Cetirizine 10mg', category: 'MEDICINE', quantity: 100 },
+    { name: 'Pantoprazole 40mg', category: 'MEDICINE', quantity: 150 },
+    { name: 'Syringes 5ml', category: 'CONSUMABLE', quantity: 1000 },
+    { name: 'Medical Gauze', category: 'CONSUMABLE', quantity: 2000 },
+  ];
+
+  for (const med of defaultMedicines) {
+    await pool.query(
+      `INSERT INTO inventory_items (id, name, category, quantity)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (name) DO NOTHING`,
+      [randomUUID(), med.name, med.category, med.quantity]
+    );
+  }
+
   console.log(
-    '✅ departments + staff + doctor_availability + bed management tables ready'
+    '✅ departments + staff + doctor_availability + bed management + inventory + pharmacy tables + seeds ready'
   );
 
   process.exit(0);

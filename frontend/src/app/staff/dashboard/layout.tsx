@@ -14,7 +14,9 @@ import {
   Settings,
   Bed,
   ClipboardPlus,
-  FileMinus
+  FileMinus,
+  Package,
+  Pill
 } from 'lucide-react';
 import {
   Tooltip,
@@ -56,11 +58,15 @@ export default function StaffLayout({
     { label: "Today's Queue", icon: Activity, path: '/staff/dashboard/queue' },
     { label: 'Manage Availability', icon: Calendar, path: '/staff/dashboard/availability' },
     { label: 'Patients', icon: User, path: '/staff/dashboard/patients' },
+    { label: 'Pharmacy', icon: Pill, path: '/staff/dashboard/pharmacy' },
+    { label: 'Inventory', icon: Package, path: '/staff/dashboard/inventory' },
   ] : [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/staff/dashboard' },
     { label: 'Beds', icon: Bed, path: '/staff/dashboard/beds' },
     { label: 'Admissions', icon: ClipboardPlus, path: '/staff/dashboard/admissions' },
     { label: 'Discharge', icon: FileMinus, path: '/staff/dashboard/discharge' },
+    { label: 'Pharmacy', icon: Pill, path: '/staff/dashboard/pharmacy' },
+    { label: 'Inventory', icon: Package, path: '/staff/dashboard/inventory' },
   ];
 
   return (
@@ -90,8 +96,8 @@ export default function StaffLayout({
                     <Link
                       href={item.path}
                       className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
-                          ? 'bg-white text-indigo-600 shadow-lg'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white'
+                        ? 'bg-white text-indigo-600 shadow-lg'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
                         }`}
                     >
                       <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />

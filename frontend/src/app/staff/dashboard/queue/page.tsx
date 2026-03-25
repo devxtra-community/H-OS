@@ -11,6 +11,7 @@ import {
 import { useEmergency } from '../../../../features/appointments/hooks/useEmergency';
 import { useRequestAdmission } from '../../../../features/admissions/hooks/useRequestAdmission';
 import { Activity, Clock, Users, Timer, CheckCircle, AlertCircle } from 'lucide-react';
+import { PrescribeModal } from '../../../../features/pharmacy/components/PrescribeModal';
 
 export default function QueuePage() {
   const { auth } = useStaffAuth();
@@ -18,6 +19,7 @@ export default function QueuePage() {
 
   const [showEmergency, setShowEmergency] = useState(false);
   const [patientId, setPatientId] = useState('');
+  const [prescribePatient, setPrescribePatient] = useState<{ id: string, name: string } | null>(null);
 
   if (auth.isRestoring) return (
     <div className="flex justify-center p-8">
@@ -120,10 +122,10 @@ export default function QueuePage() {
           <div
             key={item.id}
             className={`p-6 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition ${item.priority === 'HIGH'
-                ? 'bg-rose-50 border-rose-200'
-                : item.is_current
-                  ? 'bg-emerald-50 border-emerald-200'
-                  : 'bg-white hover:shadow-md'
+              ? 'bg-rose-50 border-rose-200'
+              : item.is_current
+                ? 'bg-emerald-50 border-emerald-200'
+                : 'bg-white hover:shadow-md'
               }`}
           >
 
@@ -137,9 +139,9 @@ export default function QueuePage() {
                 </p>
                 <div className="flex gap-2 mt-1">
                   <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${item.status === 'SCHEDULED' ? 'bg-slate-100 text-slate-700 border-slate-200' :
-                      item.status === 'CHECKED_IN' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                        item.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                          'bg-gray-100 text-gray-700 border-gray-200'
+                    item.status === 'CHECKED_IN' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                      item.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        'bg-gray-100 text-gray-700 border-gray-200'
                     }`}>
                     {item.status.replace('_', ' ')}
                   </span>
@@ -176,6 +178,13 @@ export default function QueuePage() {
               {item.status === 'IN_PROGRESS' && (
                 <>
                   <button
+                    onClick={() => setPrescribePatient({ id: item.patient_id, name: item.patient_name })}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
+                  >
+                    Prescribe
+                  </button>
+
+                  <button
                     onClick={() => completeMutation.mutate(item.id)}
                     className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
                   >
@@ -183,21 +192,27 @@ export default function QueuePage() {
                   </button>
 
                   {/* 🏥 Admit Patient */}
-                  <button
-                    disabled={admitMutation.isPending}
-                    onClick={() =>
-                      admitMutation.mutate({
-                        patientId: item.patient_id,
-                        doctorId: doctorId,
-                        departmentId: auth.staff?.department_id as string
-                      })
-                    }
-                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 shadow-sm"
-                  >
-                    {admitMutation.isPending
-                      ? 'Admitting...'
-                      : 'Admit Patient'}
-                  </button>
+                  {item.admission_requested ? (
+                    <span className="px-5 py-2.5 bg-slate-100 text-slate-500 rounded-xl text-sm font-medium border border-slate-200 cursor-not-allowed shadow-sm">
+                      Request Sent
+                    </span>
+                  ) : (
+                    <button
+                      disabled={admitMutation.isPending}
+                      onClick={() =>
+                        admitMutation.mutate({
+                          patientId: item.patient_id,
+                          doctorId: doctorId,
+                          departmentId: auth.staff?.department_id as string
+                        })
+                      }
+                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 shadow-sm"
+                    >
+                      {admitMutation.isPending
+                        ? 'Admitting...'
+                        : 'Admit Patient'}
+                    </button>
+                  )}
                 </>
               )}
 
@@ -253,6 +268,15 @@ export default function QueuePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 🔴 Prescribe Modal */}
+      {prescribePatient && (
+        <PrescribeModal
+          patientId={prescribePatient.id}
+          patientName={prescribePatient.name}
+          onClose={() => setPrescribePatient(null)}
+        />
       )}
 
     </div>

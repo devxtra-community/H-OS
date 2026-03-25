@@ -48,7 +48,14 @@ export class AppointmentRepository {
   async getDoctorAppointmentsForDay(doctorId: string, date: string) {
     const result = await pool.query(
       `
-    SELECT a.*, p.name AS patient_name
+    SELECT 
+      a.*, 
+      p.name AS patient_name,
+      EXISTS (
+        SELECT 1 FROM admissions adm 
+        WHERE adm.patient_id = a.patient_id 
+        AND adm.status != 'DISCHARGED'
+      ) AS admission_requested
     FROM appointments a
     LEFT JOIN patients p ON p.id = a.patient_id
     WHERE a.doctor_id = $1

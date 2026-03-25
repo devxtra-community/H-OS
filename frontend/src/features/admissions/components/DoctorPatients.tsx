@@ -2,11 +2,14 @@
 
 import { useDoctorAdmissions } from '../hooks/useDoctorAdmissions'
 import { useRequestDischarge } from '../hooks/useRequestDischarge'
-import { User, Building, BedDouble } from 'lucide-react'
+import { User, Building, BedDouble, Plus } from 'lucide-react'
+import { UseItemModal } from '../../inventory/components/UseItemModal'
+import { useState } from 'react'
 
 export default function DoctorPatients() {
   const { data, isLoading } = useDoctorAdmissions()
   const dischargeMutation = useRequestDischarge()
+  const [useItemPatientId, setUseItemPatientId] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -63,14 +66,34 @@ export default function DoctorPatients() {
 
           <div className="mt-6 pt-4 border-t border-slate-100 flex gap-2">
             <button
-              onClick={() => dischargeMutation.mutate(admission.id)}
-              className="w-full bg-rose-100 text-rose-700 px-4 py-2.5 rounded-xl hover:bg-rose-200 font-medium transition-colors"
+              onClick={() => setUseItemPatientId(admission.patient_id)}
+              className="w-full bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-xl hover:bg-indigo-100 font-medium transition-colors border border-indigo-100 shadow-sm"
             >
-              Request Discharge
+              Use Item
             </button>
+            {admission.discharge_requested ? (
+              <span className="w-full text-center bg-slate-100 text-slate-500 px-4 py-2.5 rounded-xl font-medium border border-slate-200 cursor-not-allowed">
+                Request Sent
+              </span>
+            ) : (
+              <button
+                disabled={dischargeMutation.isPending}
+                onClick={() => dischargeMutation.mutate(admission.id)}
+                className="w-full bg-rose-100 text-rose-700 px-4 py-2.5 rounded-xl hover:bg-rose-200 font-medium transition-colors disabled:opacity-50"
+              >
+                {dischargeMutation.isPending ? 'Requesting...' : 'Request Discharge'}
+              </button>
+            )}
           </div>
         </div>
       ))}
+
+      {useItemPatientId && (
+        <UseItemModal
+          onClose={() => setUseItemPatientId(null)}
+          patientId={useItemPatientId}
+        />
+      )}
     </div>
   )
 }

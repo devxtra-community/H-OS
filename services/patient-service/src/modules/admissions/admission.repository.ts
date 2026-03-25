@@ -7,6 +7,12 @@ class AdmissionRepository {
     doctorId: string;
     departmentId: string;
   }) {
+    const existing = await pool.query(
+      `SELECT * FROM admissions WHERE patient_id = $1 AND status != 'DISCHARGED'`,
+      [data.patientId]
+    );
+    if (existing.rows.length > 0) return existing.rows[0];
+
     const result = await pool.query(
       `
       INSERT INTO admissions
@@ -79,7 +85,8 @@ class AdmissionRepository {
       a.doctor_id,
       a.department_id,
       a.status,
-      a.created_at
+      a.created_at,
+      a.discharge_requested
     FROM admissions a
     LEFT JOIN patients p ON p.id = a.patient_id
     WHERE a.doctor_id = $1

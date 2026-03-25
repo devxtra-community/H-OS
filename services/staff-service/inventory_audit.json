@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Dolo 250mg",
+    "category": "CONSUMABLE",
+    "quantity": 10
+  },
+  {
+    "name": "Paracetamol 500mg",
+    "category": "CONSUMABLE",
+    "quantity": 8
+  },
+  {
+    "name": "Ibuprofen 400mg",
+    "category": "MEDICINE",
+    "quantity": 300
+  },
+  {
+    "name": "Pantoprazole 40mg",
+    "category": "MEDICINE",
+    "quantity": 150
+  },
+  {
+    "name": "Syringes 5ml",
+    "category": "CONSUMABLE",
+    "quantity": 1000
+  },
+  {
+    "name": "Medical Gauze",
+    "category": "CONSUMABLE",
+    "quantity": 2000
+  },
+  {
+    "name": "Cetirizine 10mg",
+    "category": "MEDICINE",
+    "quantity": 99
+  },
+  {
+    "name": "Amoxicillin 250mg",
+    "category": "MEDICINE",
+    "quantity": 200
+  },
+  {
+    "name": "new",
+    "category": "CONSUMABLE",
+    "quantity": 300
+  }
+]
