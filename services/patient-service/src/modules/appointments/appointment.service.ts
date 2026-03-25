@@ -378,6 +378,121 @@ export class AppointmentService {
       doctor_current_patient: doctorQueue.doctor_status.current_patient,
     };
   }
+
+  async setPriority(appointmentId: string, priority: 'NORMAL' | 'HIGH') {
+    const appointment =
+      await appointmentRepository.getAppointmentById(appointmentId);
+
+    if (!appointment) throw new Error('NOT_FOUND');
+
+    return appointmentRepository.updatePriority(appointmentId, priority);
+  }
+
+  async cancelAppointment(appointmentId: string, patientId: string) {
+    const appointment =
+      await appointmentRepository.getAppointmentById(appointmentId);
+
+    if (!appointment) throw new Error('NOT_FOUND');
+
+    if (appointment.patient_id !== patientId) throw new Error('FORBIDDEN');
+
+    if (appointment.status !== 'SCHEDULED') throw new Error('CANNOT_CANCEL');
+
+    // Check if it's too late (e.g. less than 1 hour before)
+    const now = new Date();
+    const apptTime = new Date(appointment.appointment_time);
+    const diffHours = (apptTime.getTime() - now.getTime()) / 3600000;
+
+    if (diffHours < 1) throw new Error('TOO_LATE_TO_CANCEL');
+
+    return this.updateStatus(appointmentId, 'CANCELLED');
+  }
+
+  async rescheduleAppointment(
+    appointmentId: string,
+    patientId: string,
+    newTimeStr: string
+  ) {
+    const appointment =
+      await appointmentRepository.getAppointmentById(appointmentId);
+
+    if (!appointment) throw new Error('NOT_FOUND');
+
+    if (appointment.patient_id !== patientId) throw new Error('FORBIDDEN');
+
+    if (appointment.status !== 'SCHEDULED')
+      throw new Error('CANNOT_RESCHEDULE');
+
+    const now = new Date();
+    const newTime = new Date(newTimeStr);
+
+    if (newTime <= now) {
+      throw new Error('PAST_TIME_NOT_ALLOWED');
+    }
+
+    // Check if too late to change current one
+    const apptTime = new Date(appointment.appointment_time);
+    const diffHours = (apptTime.getTime() - now.getTime()) / 3600000;
+
+    if (diffHours < 1) throw new Error('TOO_LATE_TO_RESCHEDULE');
+
+    // Validate new slot
+    const dayOfWeek = newTime.getDay();
+    const availabilityResponse = await axios.get(
+      `${process.env.STAFF_SERVICE_URL}/staff/availability/${appointment.doctor_id}/${dayOfWeek}`
+    );
+
+    const availability = availabilityResponse.data;
+    if (!availability) throw new Error('DOCTOR_NOT_AVAILABLE');
+
+    const { start_time, end_time, slot_duration } = availability;
+
+    const start = new Date(newTime);
+    start.setHours(
+      Number(start_time.split(':')[0]),
+      Number(start_time.split(':')[1]),
+      0,
+      0
+    );
+
+    const end = new Date(newTime);
+    end.setHours(
+      Number(end_time.split(':')[0]),
+      Number(end_time.split(':')[1]),
+      0,
+      0
+    );
+
+    if (newTime < start || newTime >= end) {
+      throw new Error('OUTSIDE_WORKING_HOURS');
+    }
+
+    const diffMinutes = (newTime.getTime() - start.getTime()) / 60000;
+    if (diffMinutes % slot_duration !== 0) {
+      throw new Error('INVALID_SLOT_TIME');
+    }
+
+    // Check if slot taken
+    const dateStr = newTime.toISOString().split('T')[0];
+    const booked = await appointmentRepository.getBookedSlots(
+      appointment.doctor_id,
+      dateStr
+    );
+
+    const hours = newTime.getHours().toString().padStart(2, '0');
+    const minutes = newTime.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    if (booked.includes(timeStr)) {
+      throw new Error('SLOT_TAKEN');
+    }
+
+    return appointmentRepository.updateAppointmentTime(
+      appointmentId,
+      newTime,
+      slot_duration
+    );
+  }
 }
 
 export const appointmentService = new AppointmentService();

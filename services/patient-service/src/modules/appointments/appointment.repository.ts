@@ -154,6 +154,34 @@ export class AppointmentRepository {
       return `${hours}:${minutes}`;
     });
   }
+
+  async updateAppointmentTime(
+    appointmentId: string,
+    newTime: Date,
+    newDuration: number
+  ) {
+    const result = await pool.query(
+      `
+    UPDATE appointments
+    SET appointment_time = $2,
+        duration_minutes = $3,
+        updated_at = now()
+    WHERE id = $1
+    RETURNING *;
+    `,
+      [appointmentId, newTime, newDuration]
+    );
+
+    return result.rows[0];
+  }
+
+  async getAppointmentById(id: string) {
+    const result = await pool.query(
+      `SELECT * FROM appointments WHERE id = $1`,
+      [id]
+    );
+    return result.rows[0] || null;
+  }
 }
 
 export const appointmentRepository = new AppointmentRepository();
