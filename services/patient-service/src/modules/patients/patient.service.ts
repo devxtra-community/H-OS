@@ -265,6 +265,15 @@ class PatientService {
     return result.rows[0] || null;
   }
 
+  async getPatientsByIds(ids: string[]) {
+    if (!ids || ids.length === 0) return [];
+    const result = await pool.query(
+      `SELECT id, name FROM patients WHERE id = ANY($1::uuid[])`,
+      [ids]
+    );
+    return result.rows;
+  }
+
   /**
    * UPDATE PATIENT PROFILE
    */

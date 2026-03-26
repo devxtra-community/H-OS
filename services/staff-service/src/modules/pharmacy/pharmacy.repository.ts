@@ -47,7 +47,11 @@ class PharmacyRepository {
     const result = await pool.query(
       `
       SELECT 
-        p.*,
+        p.id,
+        p.patient_id,
+        p.patient_name,
+        p.status,
+        p.created_at,
         s.name as doctor_name,
         json_agg(json_build_object(
           'id', pi.id,
@@ -82,6 +86,38 @@ class PharmacyRepository {
     const result = await pool.query(
       `SELECT * FROM prescription_items WHERE prescription_id = $1`,
       [prescriptionId]
+    );
+    return result.rows;
+  }
+
+  async getPatientPrescriptions(patientId: string) {
+    const result = await pool.query(
+      `
+      SELECT 
+        p.id,
+        p.patient_id,
+        p.patient_name,
+        p.status,
+        p.created_at,
+        s.name as doctor_name,
+        json_agg(json_build_object(
+          'id', pi.id,
+          'item_id', pi.item_id,
+          'quantity', pi.quantity,
+          'instructions', pi.instructions,
+          'item_name', i.name,
+          'category', i.category,
+          'stock_available', COALESCE(i.quantity, 0)
+        )) as items
+      FROM prescriptions p
+      LEFT JOIN staff s ON p.doctor_id = s.id
+      LEFT JOIN prescription_items pi ON p.id = pi.prescription_id
+      LEFT JOIN inventory_items i ON pi.item_id = i.id
+      WHERE p.patient_id = $1
+      GROUP BY p.id, s.name
+      ORDER BY p.created_at DESC
+      `,
+      [patientId]
     );
     return result.rows;
   }

@@ -46,5 +46,14 @@ class PharmacyService {
     // 3. Complete fulfillment
     return pharmacyRepository.markDispensed(prescriptionId);
   }
+
+  async getPatientPrescriptions(patientId: string) {
+    const prescriptions =
+      await pharmacyRepository.getPatientPrescriptions(patientId);
+    return prescriptions.map((p: any) => ({
+      ...p,
+      items: (p.items || []).filter((item: any) => item.id !== null),
+    }));
+  }
 }
 export const pharmacyService = new PharmacyService();

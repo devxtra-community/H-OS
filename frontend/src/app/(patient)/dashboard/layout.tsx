@@ -29,8 +29,8 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { label: 'Appointments', icon: Calendar, path: '/dashboard/appointments' },
   { label: 'Book Appointment', icon: PlusCircle, path: '/dashboard/book' },
-  { label: 'Profile', icon: User, path: '/dashboard/profile' },
   { label: 'Documents', icon: FileText, path: '/dashboard/documents' },
+  { label: 'Profile', icon: User, path: '/dashboard/profile' },
 ];
 
 export default function PatientDashboardLayout({
@@ -48,11 +48,11 @@ export default function PatientDashboardLayout({
     }
   }, [auth.isRestoring, auth.accessToken, router]);
 
-  if (auth.isRestoring) return     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="relative">
-        <div className="h-16 w-16 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
-      </div>
-    </div>;
+  if (auth.isRestoring) return <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="relative">
+      <div className="h-16 w-16 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
+    </div>
+  </div>;
   if (!auth.accessToken) return null;
 
   // Safely extract initials
@@ -85,11 +85,10 @@ export default function PatientDashboardLayout({
                   <TooltipTrigger asChild>
                     <Link
                       href={item.path}
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-200 ${
-                        isActive
-                          ? 'bg-white text-indigo-600 shadow-lg'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white'
-                      }`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
+                        ? 'bg-white text-indigo-600 shadow-lg'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
                     >
                       <item.icon size={20} strokeWidth={isActive ? 2 : 1.5} />
                     </Link>

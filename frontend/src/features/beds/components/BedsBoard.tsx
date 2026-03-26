@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useBeds } from '../hooks/useBeds'
-import { BedDouble, Building, Hash, Filter } from 'lucide-react'
+import { BedDouble, Building, Hash, Filter, User } from 'lucide-react'
 
 export default function BedsBoard() {
   const { data, isLoading } = useBeds()
@@ -118,7 +118,7 @@ export default function BedsBoard() {
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-xl ${bed.status === 'AVAILABLE' ? 'bg-emerald-100 text-emerald-600' :
-                      bed.status === 'OCCUPIED' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
+                    bed.status === 'OCCUPIED' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
                     }`}>
                     <BedDouble size={20} />
                   </div>
@@ -129,10 +129,10 @@ export default function BedsBoard() {
 
                 <span
                   className={`px-2.5 py-1 text-xs font-semibold rounded-full ${bed.status === 'AVAILABLE'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : bed.status === 'OCCUPIED'
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : bed.status === 'OCCUPIED'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}
                 >
                   {bed.status}
@@ -149,6 +149,19 @@ export default function BedsBoard() {
                   <span className="font-medium">Room: {bed.room_number}</span>
                 </div>
               </div>
+
+              {bed.status === 'OCCUPIED' && (
+                <div className="mt-4 pt-4 border-t border-rose-100 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-rose-700">
+                    <User size={16} className="opacity-70" />
+                    <span className="font-semibold">Occupied By: {bed.patient_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-rose-600">
+                    <User size={16} className="opacity-70" />
+                    <span className="font-medium">Assigned By: Dr. {bed.doctor_name}</span>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

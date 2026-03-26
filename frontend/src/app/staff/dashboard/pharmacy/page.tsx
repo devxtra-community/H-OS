@@ -2,9 +2,19 @@
 
 import { Pill, CheckCircle } from 'lucide-react'
 import { usePendingPrescriptions } from '../../../../features/pharmacy/hooks/usePharmacy'
+import { useStaffAuth } from '../../../../staff/auth/staff.auth.provider'
 import { useDispensePrescription } from '../../../../features/pharmacy/hooks/usePharmacyActions'
+import { useRouter } from 'next/navigation'
 
 export default function PharmacyPage() {
+    const { auth } = useStaffAuth();
+    const router = useRouter();
+
+    if (auth.staff?.role === 'DOCTOR') {
+        router.replace('/staff/dashboard');
+        return null;
+    }
+
     const { data: prescriptions, isLoading } = usePendingPrescriptions();
     const dispenseMutation = useDispensePrescription();
 
@@ -38,9 +48,12 @@ export default function PharmacyPage() {
                             <div key={prescription.id} className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-md transition flex flex-col justify-between">
                                 <div>
                                     <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
-                                        <div>
-                                            <h3 className="font-bold text-xl text-slate-800">{prescription.patient_name}</h3>
-                                            <p className="text-sm text-slate-500 font-medium mt-1">Dr. {prescription.doctor_name}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Patient</p>
+                                            <h3 className="font-bold text-xl text-slate-800">{prescription.patient_name || 'Anonymous Patient'}</h3>
+                                            <p className="text-sm text-indigo-600 font-semibold mt-1 flex items-center gap-1.5">
+                                                <span className="text-slate-400 font-normal">Prescribed by:</span> Dr. {prescription.doctor_name}
+                                            </p>
                                         </div>
                                         <span className="px-3 py-1 text-xs font-bold tracking-wide rounded-full bg-amber-50 text-amber-600 border border-amber-200">
                                             {prescription.status}

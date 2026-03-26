@@ -34,4 +34,9 @@ router.delete('/:id', (req, res) =>
   patientController.deactivatePatient(req, res)
 );
 
+router.post(
+  '/bulk-info',
+  patientController.getBulkInfo.bind(patientController)
+);
+
 export default router;

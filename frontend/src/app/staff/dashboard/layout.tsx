@@ -58,8 +58,6 @@ export default function StaffLayout({
     { label: "Today's Queue", icon: Activity, path: '/staff/dashboard/queue' },
     { label: 'Manage Availability', icon: Calendar, path: '/staff/dashboard/availability' },
     { label: 'Patients', icon: User, path: '/staff/dashboard/patients' },
-    { label: 'Pharmacy', icon: Pill, path: '/staff/dashboard/pharmacy' },
-    { label: 'Inventory', icon: Package, path: '/staff/dashboard/inventory' },
   ] : [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/staff/dashboard' },
     { label: 'Beds', icon: Bed, path: '/staff/dashboard/beds' },

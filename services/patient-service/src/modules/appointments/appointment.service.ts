@@ -186,6 +186,8 @@ export class AppointmentService {
       return {
         id: appt.id,
         patient_id: appt.patient_id,
+        patient_name: appt.patient_name,
+        admission_requested: appt.admission_requested,
         status: appt.status,
         priority: appt.priority,
         planned_time: appt.appointment_time,

@@ -50,14 +50,75 @@ class BedsService {
         b.bed_number,
         b.status,
         r.room_number,
-        w.name AS ward
+        w.name AS ward,
+        ba.patient_id
       FROM beds b
       JOIN rooms r ON b.room_id = r.id
       JOIN wards w ON r.ward_id = w.id
+      LEFT JOIN bed_assignments ba ON b.id = ba.bed_id AND ba.discharged_at IS NULL
       `
     );
 
-    return result.rows;
+    const beds = result.rows;
+    const activePatientIds = beds
+      .filter((b) => b.status === 'OCCUPIED' && b.patient_id)
+      .map((b) => b.patient_id);
+
+    if (activePatientIds.length === 0) return beds;
+
+    try {
+      // 1. Fetch names and current admissions from patient-service
+      const [patientsRes, admissionsRes] = await Promise.all([
+        axios.post(`${process.env.PATIENT_SERVICE_URL}/patients/bulk-info`, {
+          ids: activePatientIds,
+        }),
+        axios.post(
+          `${process.env.PATIENT_SERVICE_URL}/admissions/bulk-current`,
+          {
+            patientIds: activePatientIds,
+          }
+        ),
+      ]);
+
+      const patientMap = new Map(
+        patientsRes.data.map((p: any) => [p.id, p.name])
+      );
+      const admissionMap = new Map(
+        admissionsRes.data.map((a: any) => [a.patient_id, a.doctor_id])
+      );
+
+      const doctorIds = Array.from(
+        new Set(admissionsRes.data.map((a: any) => a.doctor_id)) as Set<string>
+      );
+
+      // 2. Fetch doctor names from local staff table
+      let doctorMap = new Map();
+      if (doctorIds.length > 0) {
+        const staffRes = await pool.query(
+          `SELECT id, name FROM staff WHERE id = ANY($1::uuid[])`,
+          [doctorIds]
+        );
+        doctorMap = new Map(staffRes.rows.map((s: any) => [s.id, s.name]));
+      }
+
+      // 3. Map back to beds
+      return beds.map((bed) => {
+        if (bed.status === 'OCCUPIED' && bed.patient_id) {
+          const doctorId = admissionMap.get(bed.patient_id);
+          return {
+            ...bed,
+            patient_name: patientMap.get(bed.patient_id) || 'Unknown Patient',
+            doctor_name: doctorId
+              ? doctorMap.get(doctorId) || 'Unknown Doctor'
+              : 'Unknown Doctor',
+          };
+        }
+        return bed;
+      });
+    } catch (e) {
+      console.error('Enrichment failed:', e);
+      return beds;
+    }
   }
 
   async assignBed(bedId: string, patientId: string, admissionId: string) {

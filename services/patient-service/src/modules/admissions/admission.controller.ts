@@ -71,4 +71,31 @@ export class AdmissionController {
 
     res.json(requests);
   }
+
+  async getCurrentAdmission(req: Request, res: Response) {
+    const patientId = req.headers['x-user-id'] as string;
+
+    if (!patientId) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+      });
+    }
+
+    const admission = await admissionService.getCurrentAdmission(patientId);
+
+    res.json(admission);
+  }
+
+  async getBulkCurrent(req: Request, res: Response) {
+    try {
+      const { patientIds } = req.body;
+      if (!Array.isArray(patientIds)) {
+        return res.status(400).json({ error: 'patientIds array required' });
+      }
+      const data = await admissionService.getBulkCurrent(patientIds);
+      return res.json(data);
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
 }

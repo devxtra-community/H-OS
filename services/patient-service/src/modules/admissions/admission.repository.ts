@@ -116,6 +116,40 @@ class AdmissionRepository {
 
     return result.rows;
   }
+
+  async getCurrentAdmission(patientId: string) {
+    const result = await pool.query(
+      `
+      SELECT * FROM admissions 
+      WHERE patient_id = $1 
+      AND status != 'DISCHARGED'
+      LIMIT 1
+      `,
+      [patientId]
+    );
+
+    return result.rows[0] || null;
+  }
+
+  async getAdmissionsByIds(ids: string[]) {
+    if (!ids || ids.length === 0) return [];
+    const result = await pool.query(
+      `SELECT id, patient_id, doctor_id FROM admissions WHERE id = ANY($1::uuid[])`,
+      [ids]
+    );
+    return result.rows;
+  }
+
+  async getBulkCurrent(patientIds: string[]) {
+    if (!patientIds || patientIds.length === 0) return [];
+    const result = await pool.query(
+      `SELECT id as admission_id, patient_id, doctor_id 
+       FROM admissions 
+       WHERE patient_id = ANY($1::uuid[]) AND status != 'DISCHARGED'`,
+      [patientIds]
+    );
+    return result.rows;
+  }
 }
 
 export const admissionRepository = new AdmissionRepository();

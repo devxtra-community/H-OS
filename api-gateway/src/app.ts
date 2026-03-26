@@ -41,9 +41,18 @@ app.use(
 // STAFF auth
 app.use('/staff/public', staffAuthProxy);
 
-app.use('/staff', authenticate, staffDataProxy);
+const injectStaffHeaders = (req: any, _res: any, next: any) => {
+  if (req.user) {
+    if (req.user.sub) req.headers['x-user-id'] = String(req.user.sub);
+    if (req.user.role) req.headers['x-user-role'] = String(req.user.role);
+    if (req.user.type) req.headers['x-user-type'] = String(req.user.type);
+  }
+  next();
+};
 
-app.use('/admin', authenticate, staffDataProxy);
+app.use('/staff', authenticate, injectStaffHeaders, staffDataProxy);
+
+app.use('/admin', authenticate, injectStaffHeaders, staffDataProxy);
 
 app.use(
   '/admissions',
@@ -83,6 +92,22 @@ app.use(
     target: process.env.PATIENT_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: (path) => `/appointments${path}`,
+  })
+);
+
+app.use(
+  '/prescriptions',
+  authenticate,
+  (req: any, _res, next) => {
+    if (req.user?.sub) {
+      req.headers['x-user-id'] = String(req.user.sub);
+    }
+    next();
+  },
+  createProxyMiddleware({
+    target: process.env.STAFF_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: (path) => `/staff/pharmacy${path}`,
   })
 );
 

@@ -110,6 +110,57 @@ class AdmissionService {
       return requests;
     }
   }
+
+  async getCurrentAdmission(patientId: string) {
+    const admission = await admissionRepository.getCurrentAdmission(patientId);
+
+    if (!admission) return null;
+
+    // Fetch doctor info
+    let doctor_name = 'Unknown Doctor';
+    try {
+      const response = await axios.post(
+        `${process.env.STAFF_SERVICE_URL}/staff/bulk-basic-info`,
+        {
+          staffIds: [admission.doctor_id],
+        }
+      );
+      const staffInfo = response.data || [];
+      doctor_name = staffInfo[0]?.doctor_name || 'Unknown Doctor';
+    } catch (err) {
+      console.error('Failed to fetch doctor info', err);
+    }
+
+    // Fetch bed assignment
+    let assignmentInfo = { ward: 'N/A', bed_number: 'N/A' };
+    try {
+      const response = await axios.post(
+        `${process.env.STAFF_SERVICE_URL}/staff/beds/active-assignments`,
+        {
+          patientIds: [patientId],
+        }
+      );
+      const activeAssignments = response.data || [];
+      if (activeAssignments.length > 0) {
+        assignmentInfo = {
+          ward: activeAssignments[0].ward,
+          bed_number: activeAssignments[0].bed_number,
+        };
+      }
+    } catch (err) {
+      console.error('Failed to fetch bed assignment', err);
+    }
+
+    return {
+      ...admission,
+      doctor_name,
+      ...assignmentInfo,
+    };
+  }
+
+  async getBulkCurrent(patientIds: string[]) {
+    return admissionRepository.getBulkCurrent(patientIds);
+  }
 }
 
 export const admissionService = new AdmissionService();

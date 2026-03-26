@@ -4,8 +4,18 @@ import { useState } from 'react'
 import { Package, Plus, Search } from 'lucide-react'
 import { useInventory } from '../../../../features/inventory/hooks/useInventory'
 import { AddStockModal } from '../../../../features/inventory/components/AddStockModal'
+import { useStaffAuth } from '../../../../staff/auth/staff.auth.provider'
+import { useRouter } from 'next/navigation'
 
 export default function InventoryPage() {
+    const { auth } = useStaffAuth();
+    const router = useRouter();
+
+    if (auth.staff?.role === 'DOCTOR') {
+        router.replace('/staff/dashboard');
+        return null;
+    }
+
     const { data: items, isLoading } = useInventory();
     const [showAddModal, setShowAddModal] = useState(false);
     const [search, setSearch] = useState('');

@@ -31,6 +31,9 @@ async function init() {
 
   status TEXT NOT NULL DEFAULT 'REQUESTED',
 
+  discharge_requested BOOLEAN DEFAULT false,
+  discharge_requested_at TIMESTAMP,
+
   created_at TIMESTAMP DEFAULT now(),
   admitted_at TIMESTAMP,
   discharged_at TIMESTAMP
