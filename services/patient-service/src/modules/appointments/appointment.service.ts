@@ -119,9 +119,17 @@ export class AppointmentService {
     return updated.rows[0];
   }
 
-  async getDoctorQueueForDay(doctorId: string, date: string) {
+  async getDoctorQueueForDay(
+    doctorId: string,
+    date: string,
+    statuses?: string[]
+  ) {
     const appointments =
-      await appointmentRepository.getDoctorAppointmentsForDay(doctorId, date);
+      await appointmentRepository.getDoctorAppointmentsForDay(
+        doctorId,
+        date,
+        statuses
+      );
 
     const GRACE_MINUTES = 10;
     const now = new Date();

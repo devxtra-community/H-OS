@@ -45,7 +45,11 @@ export class AppointmentRepository {
     }
   }
 
-  async getDoctorAppointmentsForDay(doctorId: string, date: string) {
+  async getDoctorAppointmentsForDay(
+    doctorId: string,
+    date: string,
+    statuses: string[] = ['SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS']
+  ) {
     const result = await pool.query(
       `
     SELECT 
@@ -60,12 +64,12 @@ export class AppointmentRepository {
     LEFT JOIN patients p ON p.id = a.patient_id
     WHERE a.doctor_id = $1
     AND a.appointment_time::date = $2
-    AND a.status IN ('SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS')
+    AND a.status = ANY($3)
     ORDER BY
       CASE WHEN a.priority = 'HIGH' THEN 0 ELSE 1 END,
       a.appointment_time ASC
     `,
-      [doctorId, date]
+      [doctorId, date, statuses]
     );
 
     return result.rows;

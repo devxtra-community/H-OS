@@ -60,6 +60,7 @@ export default function StaffLayout({
     { label: 'Patients', icon: User, path: '/staff/dashboard/patients' },
   ] : [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/staff/dashboard' },
+    { label: "Today's Queue", icon: Activity, path: '/staff/dashboard/queue' },
     { label: 'Beds', icon: Bed, path: '/staff/dashboard/beds' },
     { label: 'Admissions', icon: ClipboardPlus, path: '/staff/dashboard/admissions' },
     { label: 'Discharge', icon: FileMinus, path: '/staff/dashboard/discharge' },

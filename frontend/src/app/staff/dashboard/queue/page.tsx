@@ -12,42 +12,99 @@ import { useEmergency } from '../../../../features/appointments/hooks/useEmergen
 import { useRequestAdmission } from '../../../../features/admissions/hooks/useRequestAdmission';
 import { Activity, Clock, Users, Timer, CheckCircle, AlertCircle } from 'lucide-react';
 import { PrescribeModal } from '../../../../features/pharmacy/components/PrescribeModal';
+import { useDepartments, useDoctorsByDepartment } from '../../../../features/staff/hooks/useStaffData';
 
 export default function QueuePage() {
   const { auth } = useStaffAuth();
-  const doctorId = auth.staff?.id;
+  const isDoctor = auth.staff?.role === 'DOCTOR';
 
+  const [selectedDeptId, setSelectedDeptId] = useState('');
+  const [selectedDoctorId, setSelectedDoctorId] = useState(isDoctor ? auth.staff?.id : '');
   const [showEmergency, setShowEmergency] = useState(false);
   const [patientId, setPatientId] = useState('');
   const [prescribePatient, setPrescribePatient] = useState<{ id: string, name: string } | null>(null);
+
+  const { data: departments } = useDepartments();
+  const { data: doctorsInDept, isLoading: isLoadingDoctors } = useDoctorsByDepartment(selectedDeptId);
+
+  const statuses = isDoctor ? ['CHECKED_IN', 'IN_PROGRESS'] : ['SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS'];
+  const { data, isLoading } = useDoctorQueue(selectedDoctorId, statuses);
+
+  const startMutation = useStartAppointment();
+  const completeMutation = useCompleteAppointment();
+  const checkInMutation = useCheckInAppointment();
+  const emergencyMutation = useEmergency(selectedDoctorId || '');
+  const admitMutation = useRequestAdmission();
 
   if (auth.isRestoring) return (
     <div className="flex justify-center p-8">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
     </div>
   );
-  if (!doctorId) return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6 text-slate-500 text-center">
-      Doctor information not available.
-    </div>
-  );
 
-  const { data, isLoading } = useDoctorQueue(doctorId);
+  if (!isDoctor && !selectedDoctorId) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border text-center space-y-6 max-w-2xl mx-auto">
+          <div className="space-y-2">
+            <Activity size={48} className="mx-auto text-indigo-500 opacity-50" />
+            <h2 className="text-2xl font-bold text-slate-800">Staff Check-in Panel</h2>
+            <p className="text-slate-500">Select a department and doctor to manage their queue.</p>
+          </div>
 
-  const startMutation = useStartAppointment();
-  const completeMutation = useCompleteAppointment();
-  const checkInMutation = useCheckInAppointment();
-  const emergencyMutation = useEmergency(doctorId);
-  const admitMutation = useRequestAdmission();
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Department</label>
+              <select
+                value={selectedDeptId}
+                onChange={(e) => setSelectedDeptId(e.target.value)}
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white transition"
+              >
+                <option value="">Select Department...</option>
+                {departments?.map((dept: any) => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Doctor</label>
+              <select
+                disabled={!selectedDeptId || isLoadingDoctors}
+                onChange={(e) => setSelectedDoctorId(e.target.value)}
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 transition"
+                value="" // Keep it as placeholder since we set selectedDoctorId on change
+              >
+                <option value="">
+                  {isLoadingDoctors ? 'Loading doctors...' : selectedDeptId ? 'Select Doctor...' : 'Select Department first...'}
+                </option>
+                {doctorsInDept?.map((doc: any) => (
+                  <option key={doc.id} value={doc.id}>{doc.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const doctorId = selectedDoctorId;
 
   if (isLoading) return (
     <div className="flex justify-center p-8">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
     </div>
   );
+
   if (!data) return (
     <div className="bg-white rounded-2xl border shadow-sm p-6 text-slate-500 text-center">
-      No queue found.
+      No queue found for this doctor.
+      {!isDoctor && (
+        <button onClick={() => setSelectedDoctorId('')} className="block mx-auto mt-4 text-indigo-600 font-medium">
+          Change Doctor
+        </button>
+      )}
     </div>
   );
 
@@ -59,12 +116,22 @@ export default function QueuePage() {
 
       {/* 🔴 Header */}
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
-            <Activity size={24} />
-          </div>
-          Today's Queue
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
+              <Activity size={24} />
+            </div>
+            {isDoctor ? "Today's Queue" : "Staff Check-in"}
+          </h1>
+          {!isDoctor && (
+            <button
+              onClick={() => setSelectedDoctorId('')}
+              className="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition"
+            >
+              Switch Doctor
+            </button>
+          )}
+        </div>
 
         <button
           onClick={() => setShowEmergency(true)}
@@ -116,7 +183,7 @@ export default function QueuePage() {
       <div className="grid grid-cols-1 gap-4">
         {queue.length === 0 ? (
           <div className="bg-white rounded-2xl border shadow-sm p-6 text-slate-500 text-center">
-            The queue is currently empty.
+            {isDoctor ? "No patients ready for consultation." : "No upcoming appointments for this doctor."}
           </div>
         ) : queue.map((item: any) => (
           <div
@@ -154,8 +221,8 @@ export default function QueuePage() {
 
             <div className="flex gap-3 flex-wrap">
 
-              {/* Check In */}
-              {item.status === 'SCHEDULED' && (
+              {/* Check In - STAFF ONLY */}
+              {!isDoctor && item.status === 'SCHEDULED' && (
                 <button
                   onClick={() => checkInMutation.mutate(item.id)}
                   className="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-sm font-medium transition shadow-sm"
@@ -164,8 +231,8 @@ export default function QueuePage() {
                 </button>
               )}
 
-              {/* Start Consultation */}
-              {item.status === 'CHECKED_IN' && !someoneInProgress && (
+              {/* Start Consultation - DOCTOR ONLY */}
+              {isDoctor && item.status === 'CHECKED_IN' && !someoneInProgress && (
                 <button
                   onClick={() => startMutation.mutate(item.id)}
                   className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
@@ -174,8 +241,8 @@ export default function QueuePage() {
                 </button>
               )}
 
-              {/* Complete Consultation */}
-              {item.status === 'IN_PROGRESS' && (
+              {/* Complete Consultation - DOCTOR ONLY */}
+              {isDoctor && item.status === 'IN_PROGRESS' && (
                 <>
                   <button
                     onClick={() => setPrescribePatient({ id: item.patient_id, name: item.patient_name })}
@@ -202,7 +269,7 @@ export default function QueuePage() {
                       onClick={() =>
                         admitMutation.mutate({
                           patientId: item.patient_id,
-                          doctorId: doctorId,
+                          doctorId: doctorId as string,
                           departmentId: auth.staff?.department_id as string
                         })
                       }
