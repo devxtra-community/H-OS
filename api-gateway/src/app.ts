@@ -18,7 +18,12 @@ const frontendProxy = createProxyMiddleware({
 });
 
 const isPageRequest = (req: any) => {
-  return req.method === 'GET' && req.headers.accept?.includes('text/html');
+  return (
+    (req.method === 'GET' && req.headers.accept?.includes('text/html')) ||
+    req.headers['rsc'] ||
+    req.headers['next-router-prefetch'] ||
+    req.headers['next-router-state-tree']
+  );
 };
 
 app.use(
