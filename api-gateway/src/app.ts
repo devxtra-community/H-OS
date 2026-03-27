@@ -105,17 +105,16 @@ app.use(
   createProxyMiddleware({
     target: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
     changeOrigin: true,
-    pathRewrite: (path) => `/admissions${path}`,
+    pathRewrite: (path) =>
+      `/admissions${path}`.replace(/\/$/, '') || '/admissions',
     on: {
       error: (err: any, req: any, res: any) => {
         console.error('[Gateway] /admissions proxy error:', err.message);
         if (!res.headersSent) {
-          res
-            .status(502)
-            .json({
-              error: 'Patient service unavailable',
-              details: err.message,
-            });
+          res.status(502).json({
+            error: 'Patient service unavailable',
+            details: err.message,
+          });
         }
       },
     },
@@ -140,17 +139,16 @@ app.use(
   createProxyMiddleware({
     target: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
     changeOrigin: true,
-    pathRewrite: (path) => `/appointments${path}`,
+    pathRewrite: (path) =>
+      `/appointments${path}`.replace(/\/$/, '') || '/appointments',
     on: {
       error: (err: any, req: any, res: any) => {
         console.error('[Gateway] /appointments proxy error:', err.message);
         if (!res.headersSent) {
-          res
-            .status(502)
-            .json({
-              error: 'Patient service unavailable',
-              details: err.message,
-            });
+          res.status(502).json({
+            error: 'Patient service unavailable',
+            details: err.message,
+          });
         }
       },
     },

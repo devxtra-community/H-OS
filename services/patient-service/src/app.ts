@@ -9,6 +9,9 @@ import appointmentRoutes from './modules/appointments/appointment.routes';
 import admissionRoutes from './modules/admissions/admission.routes';
 const app = express();
 
+// Normalize trailing slashes (Nginx may redirect /foo -> /foo/)
+app.set('strict routing', false);
+
 // Middleware
 app.use(cookieParser());
 app.use(express.json());
