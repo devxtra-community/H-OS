@@ -11,6 +11,7 @@ import { getPatientDocuments } from '@/src/features/patient/api/getDocument';
 import { getProfile } from '@/src/features/patient/api/getProfile';
 
 import { Calendar, FileText, CalendarPlus, Upload, CloudCog } from 'lucide-react';
+import AdmissionStatus from '@/src/features/patient/components/AdmissionStatus';
 
 export default function DashboardHome() {
 
@@ -32,8 +33,8 @@ export default function DashboardHome() {
       const docs = await getPatientDocuments();
       const profileData = await getProfile();
 
-      console.log('profiledata',profileData);
-      
+      console.log('profiledata', profileData);
+
       setProfile(profileData);
       setPatientName(profileData.name);
 
@@ -104,6 +105,9 @@ export default function DashboardHome() {
         </Link>
 
       </div>
+
+      {/* Admission Status */}
+      <AdmissionStatus />
 
       {/* Quick Actions */}
 

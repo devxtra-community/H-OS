@@ -1,13 +1,16 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth.middleware';
 
-// what actions exist in the system
-export type Permission = 'CREATE_STAFF' | 'UPDATE_STAFF' | 'DEACTIVATE_STAFF';
+export type Permission =
+  | 'CREATE_STAFF'
+  | 'UPDATE_STAFF'
+  | 'DEACTIVATE_STAFF'
+  | 'MANAGE_BEDS';
 
-// staff role → permissions
 const STAFF_ROLE_PERMISSIONS: Record<string, Permission[]> = {
   DOCTOR: [],
-  NURSE: [],
+  NURSE: ['MANAGE_BEDS'],
+  RECEPTIONIST: ['MANAGE_BEDS'],
 };
 
 export function requirePermission(permission: Permission) {
@@ -18,12 +21,22 @@ export function requirePermission(permission: Permission) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // ✅ ADMIN can do everything
+    // ADMIN can do everything
     if (user.type === 'ADMIN') {
       return next();
     }
 
-    // ❌ STAFF cannot do admin actions
-    return res.status(403).json({ error: 'Forbidden' });
+    // Only STAFF can have role permissions
+    if (user.type !== 'STAFF' || !user.role) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const rolePermissions = STAFF_ROLE_PERMISSIONS[user.role] ?? [];
+
+    if (!rolePermissions.includes(permission)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    next();
   };
 }

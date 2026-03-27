@@ -154,9 +154,21 @@ export class AppointmentController {
       const date =
         (req.query.date as string) || new Date().toISOString().split('T')[0];
 
+      const statusesQuery = req.query.statuses;
+      let statuses: string[] | undefined;
+
+      if (statusesQuery) {
+        if (Array.isArray(statusesQuery)) {
+          statuses = statusesQuery as string[];
+        } else {
+          statuses = (statusesQuery as string).split(',');
+        }
+      }
+
       const queue = await appointmentService.getDoctorQueueForDay(
         doctorId,
-        date
+        date,
+        statuses
       );
 
       return res.json(queue);

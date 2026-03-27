@@ -21,6 +21,23 @@ async function init() {
     );
   `);
 
+  // Admissions table
+
+  await pool.query(`CREATE TABLE IF NOT EXISTS admissions (
+  id UUID PRIMARY KEY,
+  patient_id UUID NOT NULL,
+  doctor_id UUID NOT NULL,
+  department_id UUID NOT NULL,
+
+  status TEXT NOT NULL DEFAULT 'REQUESTED',
+
+  discharge_requested BOOLEAN DEFAULT false,
+  discharge_requested_at TIMESTAMP,
+
+  created_at TIMESTAMP DEFAULT now(),
+  admitted_at TIMESTAMP,
+  discharged_at TIMESTAMP
+);`);
   /**
    * PATIENT PROFILES TABLE
    * Extended medical + personal information

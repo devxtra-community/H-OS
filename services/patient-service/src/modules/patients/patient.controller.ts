@@ -163,8 +163,21 @@ class PatientController {
     const { file_key } = req.body;
 
     await deletePatientDocument(patientId, file_key);
-
     return res.json({ success: true });
+  }
+
+  async getBulkInfo(req: Request, res: Response) {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).json({ error: 'ids array required' });
+      }
+      const patients = await patientService.getPatientsByIds(ids);
+      return res.json(patients);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Failed' });
+    }
   }
 }
 

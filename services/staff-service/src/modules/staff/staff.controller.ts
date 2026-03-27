@@ -38,6 +38,22 @@ export class StaffController {
     }
   }
 
+  async getBulkBasicInfo(req: Request, res: Response) {
+    try {
+      const { staffIds } = req.body;
+      if (!Array.isArray(staffIds) || staffIds.length === 0) {
+        res.json([]);
+        return;
+      }
+      const data = await staffService.getBulkBasicInfo(staffIds);
+      res.json(data);
+      return;
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch bulk staff info' });
+      return;
+    }
+  }
+
   async updateStaff(req: Request, res: Response) {
     try {
       const id = getIdParam(req);

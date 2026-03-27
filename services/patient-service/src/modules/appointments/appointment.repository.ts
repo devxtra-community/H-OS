@@ -45,19 +45,31 @@ export class AppointmentRepository {
     }
   }
 
-  async getDoctorAppointmentsForDay(doctorId: string, date: string) {
+  async getDoctorAppointmentsForDay(
+    doctorId: string,
+    date: string,
+    statuses: string[] = ['SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS']
+  ) {
     const result = await pool.query(
       `
-    SELECT *
-    FROM appointments
-    WHERE doctor_id = $1
-    AND appointment_time::date = $2
-    AND status IN ('SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS')
+    SELECT 
+      a.*, 
+      p.name AS patient_name,
+      EXISTS (
+        SELECT 1 FROM admissions adm 
+        WHERE adm.patient_id = a.patient_id 
+        AND adm.status != 'DISCHARGED'
+      ) AS admission_requested
+    FROM appointments a
+    LEFT JOIN patients p ON p.id = a.patient_id
+    WHERE a.doctor_id = $1
+    AND a.appointment_time::date = $2
+    AND a.status = ANY($3)
     ORDER BY
-      CASE WHEN priority = 'HIGH' THEN 0 ELSE 1 END,
-      appointment_time ASC
+      CASE WHEN a.priority = 'HIGH' THEN 0 ELSE 1 END,
+      a.appointment_time ASC
     `,
-      [doctorId, date]
+      [doctorId, date, statuses]
     );
 
     return result.rows;
@@ -145,6 +157,34 @@ export class AppointmentRepository {
       const minutes = d.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
     });
+  }
+
+  async updateAppointmentTime(
+    appointmentId: string,
+    newTime: Date,
+    newDuration: number
+  ) {
+    const result = await pool.query(
+      `
+    UPDATE appointments
+    SET appointment_time = $2,
+        duration_minutes = $3,
+        updated_at = now()
+    WHERE id = $1
+    RETURNING *;
+    `,
+      [appointmentId, newTime, newDuration]
+    );
+
+    return result.rows[0];
+  }
+
+  async getAppointmentById(id: string) {
+    const result = await pool.query(
+      `SELECT * FROM appointments WHERE id = $1`,
+      [id]
+    );
+    return result.rows[0] || null;
   }
 }
 

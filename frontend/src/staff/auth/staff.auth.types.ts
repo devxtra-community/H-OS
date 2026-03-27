@@ -1,3 +1,4 @@
+// import { strict } from 'assert';
 import { z } from 'zod';
 
 export const StaffSchema = z.object({
@@ -5,6 +6,7 @@ export const StaffSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   department: z.string(),
+  department_id: z.string(),
   role: z.string(),
   job_title: z.string(),
 });

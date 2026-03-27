@@ -119,6 +119,7 @@ export class StaffAuthController {
           role: staff.role,
           job_title: staff.job_title,
           department: staff.department,
+          department_id: staff.department_id,
         },
       });
     } catch {
@@ -170,10 +171,25 @@ export class StaffAuthController {
       /**
        * 🔐 NEW ACCESS TOKEN
        */
+      // fetch staff info
+      const staffResult = await pool.query(
+        `
+SELECT role, job_title, department_id
+FROM staff
+WHERE id = $1
+`,
+        [stored.staff_id]
+      );
+
+      const staff = staffResult.rows[0];
+
       const newAccessToken = jwt.sign(
         {
           sub: stored.staff_id,
           type: 'STAFF',
+          role: staff.role,
+          job_title: staff.job_title,
+          department_id: staff.department_id,
         },
         process.env.JWT_SECRET!,
         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
@@ -279,11 +295,17 @@ export class StaffAuthController {
       }
 
       const result = await pool.query(
-        `
-        SELECT id, name, email, department_id, role, job_title
-        FROM staff
-        WHERE id = $1
-        `,
+        `SELECT
+  s.id,
+  s.name,
+  s.email,
+  s.role,
+  s.job_title,
+  d.id AS department_id,
+  d.name AS department
+FROM staff s
+JOIN departments d ON s.department_id = d.id
+WHERE s.id = $1`,
         [payload.sub]
       );
 
