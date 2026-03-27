@@ -23,6 +23,11 @@ export function authenticate(
   res: Response,
   next: NextFunction
 ) {
+  // 🔓 Skip authentication for public routes
+  if (req.path.includes('/public')) {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {

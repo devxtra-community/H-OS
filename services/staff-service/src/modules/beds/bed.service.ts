@@ -1,6 +1,5 @@
 import { pool } from '../../db';
 import { randomUUID } from 'crypto';
-import axios from 'axios';
 
 class BedsService {
   async createWard(name: string, description?: string) {
@@ -69,26 +68,32 @@ class BedsService {
     try {
       // 1. Fetch names and current admissions from patient-service
       const [patientsRes, admissionsRes] = await Promise.all([
-        axios.post(`${process.env.PATIENT_SERVICE_URL}/patients/bulk-info`, {
-          ids: activePatientIds,
+        fetch(`${process.env.PATIENT_SERVICE_URL}/patients/bulk-info`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: activePatientIds }),
         }),
-        axios.post(
-          `${process.env.PATIENT_SERVICE_URL}/admissions/bulk-current`,
-          {
-            patientIds: activePatientIds,
-          }
-        ),
+        fetch(`${process.env.PATIENT_SERVICE_URL}/admissions/bulk-current`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ patientIds: activePatientIds }),
+        }),
       ]);
 
-      const patientMap = new Map(
-        patientsRes.data.map((p: any) => [p.id, p.name])
-      );
+      if (!patientsRes.ok || !admissionsRes.ok) {
+        throw new Error('Failed to fetch patient or admission info');
+      }
+
+      const patientsData = await patientsRes.json();
+      const admissionsData = await admissionsRes.json();
+
+      const patientMap = new Map(patientsData.map((p: any) => [p.id, p.name]));
       const admissionMap = new Map(
-        admissionsRes.data.map((a: any) => [a.patient_id, a.doctor_id])
+        admissionsData.map((a: any) => [a.patient_id, a.doctor_id])
       );
 
       const doctorIds = Array.from(
-        new Set(admissionsRes.data.map((a: any) => a.doctor_id)) as Set<string>
+        new Set(admissionsData.map((a: any) => a.doctor_id)) as Set<string>
       );
 
       // 2. Fetch doctor names from local staff table
@@ -146,8 +151,9 @@ class BedsService {
     );
 
     // 🔁 Notify patient-service admission is complete
-    await axios.post(
-      `${process.env.PATIENT_SERVICE_URL}/admissions/${admissionId}/admit`
+    await fetch(
+      `${process.env.PATIENT_SERVICE_URL}/admissions/${admissionId}/admit`,
+      { method: 'POST' }
     );
 
     return assignment.rows[0];
@@ -188,8 +194,9 @@ class BedsService {
       [bedId]
     );
 
-    await axios.post(
-      `${process.env.PATIENT_SERVICE_URL}/admissions/${admissionId}/discharged`
+    await fetch(
+      `${process.env.PATIENT_SERVICE_URL}/admissions/${admissionId}/discharged`,
+      { method: 'POST' }
     );
   }
 
