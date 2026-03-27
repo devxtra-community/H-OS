@@ -103,9 +103,22 @@ app.use(
     next();
   },
   createProxyMiddleware({
-    target: process.env.PATIENT_SERVICE_URL,
+    target: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
     changeOrigin: true,
     pathRewrite: (path) => `/admissions${path}`,
+    on: {
+      error: (err: any, req: any, res: any) => {
+        console.error('[Gateway] /admissions proxy error:', err.message);
+        if (!res.headersSent) {
+          res
+            .status(502)
+            .json({
+              error: 'Patient service unavailable',
+              details: err.message,
+            });
+        }
+      },
+    },
   })
 );
 //Appointment routes (accessible by PATIENT + STAFF + ADMIN)
@@ -125,9 +138,22 @@ app.use(
     next();
   },
   createProxyMiddleware({
-    target: process.env.PATIENT_SERVICE_URL,
+    target: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
     changeOrigin: true,
     pathRewrite: (path) => `/appointments${path}`,
+    on: {
+      error: (err: any, req: any, res: any) => {
+        console.error('[Gateway] /appointments proxy error:', err.message);
+        if (!res.headersSent) {
+          res
+            .status(502)
+            .json({
+              error: 'Patient service unavailable',
+              details: err.message,
+            });
+        }
+      },
+    },
   })
 );
 
@@ -138,12 +164,24 @@ app.use(
     if (req.user?.sub) {
       req.headers['x-user-id'] = String(req.user.sub);
     }
+    if (req.user?.role) req.headers['x-user-role'] = String(req.user.role);
+    if (req.user?.type) req.headers['x-user-type'] = String(req.user.type);
     next();
   },
   createProxyMiddleware({
-    target: process.env.STAFF_SERVICE_URL,
+    target: process.env.STAFF_SERVICE_URL || 'http://localhost:3002',
     changeOrigin: true,
     pathRewrite: (path) => `/staff/pharmacy${path}`,
+    on: {
+      error: (err: any, req: any, res: any) => {
+        console.error('[Gateway] /prescriptions proxy error:', err.message);
+        if (!res.headersSent) {
+          res
+            .status(502)
+            .json({ error: 'Staff service unavailable', details: err.message });
+        }
+      },
+    },
   })
 );
 
