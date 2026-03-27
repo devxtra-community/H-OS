@@ -12,6 +12,15 @@ import { requirePermission } from './middlewares/rbac.middleware';
 import { staffDataProxy } from './proxy/staff.data.proxy';
 const app = express();
 
+const frontendProxy = createProxyMiddleware({
+  target: 'http://localhost:3000',
+  changeOrigin: true,
+});
+
+const isPageRequest = (req: any) => {
+  return req.method === 'GET' && req.headers.accept?.includes('text/html');
+};
+
 app.use(
   cors({
     origin: process.env.ALLOWED_ORIGINS?.split(','),
@@ -50,9 +59,31 @@ const injectStaffHeaders = (req: any, _res: any, next: any) => {
   next();
 };
 
-app.use('/staff', authenticate, injectStaffHeaders, staffDataProxy);
+app.use(
+  '/staff',
+  (req, res, next) => {
+    if (isPageRequest(req)) return next();
+    authenticate(req, res, next);
+  },
+  injectStaffHeaders,
+  (req, res, next) => {
+    if (isPageRequest(req)) return next();
+    staffDataProxy(req, res, next);
+  }
+);
 
-app.use('/admin', authenticate, injectStaffHeaders, staffDataProxy);
+app.use(
+  '/admin',
+  (req, res, next) => {
+    if (isPageRequest(req)) return next();
+    authenticate(req, res, next);
+  },
+  injectStaffHeaders,
+  (req, res, next) => {
+    if (isPageRequest(req)) return next();
+    staffDataProxy(req, res, next);
+  }
+);
 
 app.use(
   '/admissions',
@@ -110,5 +141,10 @@ app.use(
     pathRewrite: (path) => `/staff/pharmacy${path}`,
   })
 );
+
+// Fallback to frontend for all other requests (pages, static assets, etc.)
+app.use((req, res, next) => {
+  frontendProxy(req, res, next);
+});
 
 export default app;
