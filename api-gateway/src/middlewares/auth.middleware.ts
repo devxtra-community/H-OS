@@ -23,8 +23,12 @@ export function authenticate(
   res: Response,
   next: NextFunction
 ) {
-  // 🔓 Skip authentication for public routes
-  if (req.path.includes('/public')) {
+  // 🔓 Skip authentication for public routes or pages
+  if (
+    req.path.includes('/public') ||
+    req.path.includes('/login') ||
+    req.path.includes('/register')
+  ) {
     return next();
   }
 
