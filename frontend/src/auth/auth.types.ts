@@ -4,7 +4,8 @@ export const PatientSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   name: z.string(),
-  isActive: z.boolean(),
+  role: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
 
 export const LoginResponseSchema = z.object({

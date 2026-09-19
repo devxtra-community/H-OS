@@ -1,7 +1,7 @@
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 export const staffDataProxy = createProxyMiddleware({
-  target: 'http://localhost:3002',
+  target: process.env.STAFF_SERVICE_URL || 'http://localhost:3002',
   changeOrigin: true,
   pathRewrite: (path, req: any) => {
     if (req.originalUrl.startsWith('/admin')) {

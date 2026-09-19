@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { appointmentService } from './appointment.service';
-import { error, log } from 'console';
 
 export class AppointmentController {
   async book(req: Request, res: Response) {

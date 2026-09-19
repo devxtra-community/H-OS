@@ -129,14 +129,14 @@ class StaffService {
       UPDATE staff
       SET
         name = COALESCE($2, name),
-        department = COALESCE($3, department),
+        department_id = COALESCE($3, department_id),
         role = COALESCE($4, role),
         job_title = COALESCE($5, job_title),
         updated_at = now()
       WHERE id = $1
-      RETURNING id, name, email, department, role, job_title
+      RETURNING id, name, email, department_id, role, job_title
       `,
-      [id, data.name, data.department, data.role, data.job_title]
+      [id, data.name, data.department_id, data.role, data.job_title]
     );
 
     return result.rows[0];

@@ -7,10 +7,7 @@ export async function loginPatient(email: string, password: string) {
     password,
   });
 
-  console.log('LOGIN RESPONSE DATA:', res.data);
-
-  // ⛔ TEMP: do NOT parse, just return raw data
-  return res.data;
+  return LoginResponseSchema.parse(res.data);
 }
 
 export async function registerPatient(data: {

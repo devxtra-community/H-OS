@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { error } from 'node:console';
 
 // console.log('JWT_SECRET in gateway:', process.env.JWT_SECRET);
 

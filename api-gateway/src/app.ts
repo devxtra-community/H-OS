@@ -4,7 +4,7 @@ import healthRoutes from './routes/health';
 import { patientAuthProxy } from './proxy/patient.auth.proxy';
 import { patientDataProxy } from './proxy/patient.data.proxy';
 import { staffAuthProxy } from './proxy/staff.auth.proxy';
-// import staffDataRouter from './routes/staff.data.router';
+import staffDataRouter from './routes/staff.data.router';
 import { authenticate } from './middlewares/auth.middleware';
 import { requirePatientSelf } from './middlewares/patient.guard';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -73,7 +73,7 @@ app.use(
   injectStaffHeaders,
   (req, res, next) => {
     if (isPageRequest(req)) return next();
-    staffDataProxy(req, res, next);
+    staffDataRouter(req, res, next);
   }
 );
 

@@ -39,11 +39,9 @@ class PatientService {
     }
 
     const id = randomUUID();
-    console.log('Raw pass : ', data.password);
 
     const passwordHash = await bcrypt.hash(String(data.password).trim(), 10);
 
-    console.log('hashed pass : ', passwordHash);
     const result = await pool.query(
       `
       INSERT INTO patients

@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { generateUploadUrl, deleteFile } from './patient.upload.service';
 
 class PatientUploadController {
