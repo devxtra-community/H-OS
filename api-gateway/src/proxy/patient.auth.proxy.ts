@@ -9,8 +9,10 @@ export const patientAuthProxy = createProxyMiddleware({
   on: {
     error: (err, req, res) => {
       console.error('[Gateway] patientAuthProxy error:', err.message);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Proxy Error', details: err.message }));
+      if ('writeHead' in res) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Proxy Error', details: err.message }));
+      }
     },
   },
 });
