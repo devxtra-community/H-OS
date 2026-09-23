@@ -1,26 +1,19 @@
+import { uploadFiles } from '@/src/lib/uploadthing';
 import { api } from '@/src/lib/api';
 
 export async function uploadProfileImage(file: File) {
-  // 1 get signed upload url
-  const { data } = await api.get('/patients/upload/upload-url', {
-    params: {
-      fileType: file.type,
-      type: 'profile', // ✅ REQUIRED
-    },
+  const res = await uploadFiles('profileImage', {
+    files: [file],
   });
 
-  const { uploadUrl, fileUrl } = data;
+  if (!res || res.length === 0) {
+    throw new Error('Upload failed: no response from server');
+  }
 
-  // 2 upload to s3
-  await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type,
-    },
-  });
+  const uploaded = res[0];
+  const fileUrl = (uploaded as any).ufsUrl || uploaded.url;
 
-  // 3 save url in database
+  // Save url in database via existing backend endpoint
   await api.put('/patients/profile-image', {
     profile_image: fileUrl,
   });

@@ -1,26 +1,20 @@
+import { uploadFiles } from '@/src/lib/uploadthing';
 import { api } from '@/src/lib/api';
 
 export async function uploadPatientDocument(file: File) {
-  // 1 get signed upload URL
-  const { data } = await api.get('/patients/upload/upload-url', {
-    params: {
-      fileType: file.type,
-      type: 'document',
-    },
+  const res = await uploadFiles('patientDocument', {
+    files: [file],
   });
 
-  const { uploadUrl, fileUrl, key } = data;
+  if (!res || res.length === 0) {
+    throw new Error('Upload failed: no response from server');
+  }
 
-  // 2 upload file to S3
-  await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': file.type,
-    },
-  });
+  const uploaded = res[0];
+  const fileUrl = (uploaded as any).ufsUrl || uploaded.url;
+  const key = uploaded.key;
 
-  // 3 save document in database
+  // Save document in database via existing backend endpoint
   await api.post('/patients/documents', {
     file_url: fileUrl,
     file_key: key,
