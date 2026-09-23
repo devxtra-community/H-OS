@@ -8,6 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "init-db": "tsx scripts/init-db.ts",
+    "prebuild": "pnpm --filter @h-os/shared build",
     "build": "tsc"
   },
   "keywords": [],
