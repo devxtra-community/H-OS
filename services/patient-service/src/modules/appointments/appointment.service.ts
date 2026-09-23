@@ -26,7 +26,7 @@ export class AppointmentService {
       throw new Error('PAST_TIME_NOT_ALLOWED');
     }
 
-    const dayOfWeek = appointmentDate.getDay();
+    const dayOfWeek = appointmentDate.getUTCDay();
 
     const availabilityResponse = await axios.get(
       `${process.env.STAFF_SERVICE_URL}/staff/availability/${data.doctorId}/${dayOfWeek}`
@@ -148,7 +148,11 @@ export class AppointmentService {
 
     let currentTime: Date | null = null;
 
-    const queue = appointments.map((appt, index) => {
+    const activeAppointments = appointments.filter(
+      (a) => a.status !== 'NO_SHOW' && a.status !== 'CANCELLED'
+    );
+
+    const queue = activeAppointments.map((appt, index) => {
       let estimatedStart: Date;
 
       if (
@@ -261,7 +265,11 @@ export class AppointmentService {
           return {
             ...appt,
             doctor_name: doctor.name,
-            department: doctor.department_id,
+            department:
+              doctor.department_name ||
+              doctor.department ||
+              doctor.job_title ||
+              doctor.department_id,
           };
         } catch {
           return {
@@ -277,7 +285,8 @@ export class AppointmentService {
   }
 
   async getAvailableSlots(doctorId: string, date: string) {
-    const dayOfWeek = new Date(date).getDay();
+    const [year, month, day] = date.split('-').map(Number);
+    const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 
     const availabilityResponse = await axios.get(
       `${process.env.STAFF_SERVICE_URL}/staff/availability/${doctorId}/${dayOfWeek}`
@@ -447,7 +456,7 @@ export class AppointmentService {
     if (diffHours < 1) throw new Error('TOO_LATE_TO_RESCHEDULE');
 
     // Validate new slot
-    const dayOfWeek = newTime.getDay();
+    const dayOfWeek = newTime.getUTCDay();
     const availabilityResponse = await axios.get(
       `${process.env.STAFF_SERVICE_URL}/staff/availability/${appointment.doctor_id}/${dayOfWeek}`
     );

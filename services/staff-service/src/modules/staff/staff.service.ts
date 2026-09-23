@@ -96,9 +96,18 @@ class StaffService {
   async getStaffById(id: string) {
     const result = await pool.query(
       `
-      SELECT id, name, email, department_id, role, job_title, is_active
-      FROM staff
-      WHERE id = $1
+      SELECT 
+        s.id, 
+        s.name, 
+        s.email, 
+        s.department_id, 
+        d.name AS department_name, 
+        s.role, 
+        s.job_title, 
+        s.is_active
+      FROM staff s
+      LEFT JOIN departments d ON s.department_id = d.id
+      WHERE s.id = $1
       `,
       [id]
     );

@@ -159,45 +159,76 @@ class BedsService {
     return assignment.rows[0];
   }
 
-  async dischargePatient(admissionId: string) {
-    const result = await pool.query(
-      `
-    SELECT bed_id
-    FROM bed_assignments
-    WHERE admission_id = $1
-    AND discharged_at IS NULL
-    `,
-      [admissionId]
-    );
+  async dischargePatient(
+    input: string | { admissionId?: string; bedId?: string }
+  ) {
+    const admissionId = typeof input === 'string' ? input : input.admissionId;
+    const directBedId = typeof input === 'object' ? input.bedId : undefined;
 
-    const bedId = result.rows[0]?.bed_id;
+    let result;
+    if (admissionId) {
+      result = await pool.query(
+        `
+        SELECT id, bed_id, admission_id
+        FROM bed_assignments
+        WHERE admission_id = $1
+        AND discharged_at IS NULL
+        `,
+        [admissionId]
+      );
+    } else if (directBedId) {
+      result = await pool.query(
+        `
+        SELECT id, bed_id, admission_id
+        FROM bed_assignments
+        WHERE bed_id = $1
+        AND discharged_at IS NULL
+        `,
+        [directBedId]
+      );
+    }
 
-    if (!bedId) {
+    const assignment = result?.rows[0];
+    const targetBedId = assignment?.bed_id || directBedId;
+    const targetAdmissionId = assignment?.admission_id || admissionId;
+
+    if (!targetBedId) {
       throw new Error('Active bed assignment not found');
+    }
+
+    if (assignment) {
+      await pool.query(
+        `
+        UPDATE bed_assignments
+        SET discharged_at = now()
+        WHERE id = $1
+        `,
+        [assignment.id]
+      );
     }
 
     await pool.query(
       `
-    UPDATE bed_assignments
-    SET discharged_at = now()
-    WHERE admission_id = $1
-    `,
-      [admissionId]
+      UPDATE beds
+      SET status = 'AVAILABLE'
+      WHERE id = $1
+      `,
+      [targetBedId]
     );
 
-    await pool.query(
-      `
-    UPDATE beds
-    SET status = 'AVAILABLE'
-    WHERE id = $1
-    `,
-      [bedId]
-    );
-
-    await fetch(
-      `${process.env.PATIENT_SERVICE_URL}/admissions/${admissionId}/discharged`,
-      { method: 'POST' }
-    );
+    if (targetAdmissionId) {
+      try {
+        await fetch(
+          `${process.env.PATIENT_SERVICE_URL}/admissions/${targetAdmissionId}/discharged`,
+          { method: 'POST' }
+        );
+      } catch (err: any) {
+        console.error(
+          'Failed to notify patient-service of discharge:',
+          err.message
+        );
+      }
+    }
   }
 
   async getActiveAssignments(patientIds: string[]) {

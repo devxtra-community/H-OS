@@ -1,6 +1,7 @@
 'use client'
 
 import { useRequestAdmission } from '@/src/features/admissions/hooks/useRequestAdmission'
+import { formatAppointmentTime } from '@/src/lib/dateUtils'
 
 export default function StaffQueueCard({ appointment }: any) {
 
@@ -24,7 +25,7 @@ export default function StaffQueueCard({ appointment }: any) {
         </div>
 
         <div className="text-sm text-gray-500">
-          Time: {appointment.appointment_time}
+          Time: {formatAppointmentTime(appointment.appointment_time)}
         </div>
       </div>
 

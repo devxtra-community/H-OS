@@ -5,6 +5,7 @@ import {
   useCompleteAppointment,
   useCheckInAppointment,
 } from '../hooks/useStaffActions';
+import { formatAppointmentTime } from '@/src/lib/dateUtils';
 
 interface Props {
   appointment: any;
@@ -24,7 +25,7 @@ export default function StaffQueueCard({ appointment }: Props) {
         <div>
           <p className="font-semibold">{appointment.patient_name}</p>
           <p className="text-sm text-gray-500">
-            {new Date(appointment.planned_time).toLocaleTimeString()}
+            {formatAppointmentTime(appointment.planned_time)}
           </p>
         </div>
 

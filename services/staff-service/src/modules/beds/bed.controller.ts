@@ -48,9 +48,9 @@ export class BedsController {
   }
 
   async dischargePatient(req: Request, res: Response) {
-    const { admissionId } = req.body;
+    const { admissionId, bedId } = req.body;
 
-    await bedsService.dischargePatient(admissionId);
+    await bedsService.dischargePatient({ admissionId, bedId });
 
     res.json({
       message: 'Patient discharged and bed released',

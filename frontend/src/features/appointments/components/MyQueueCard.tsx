@@ -1,6 +1,7 @@
 'use client';
 
 import { useMyStatus } from '../hooks/useMyStatus';
+import { formatAppointmentTime } from '@/src/lib/dateUtils';
 
 export default function MyQueueCard() {
   
@@ -59,7 +60,7 @@ export default function MyQueueCard() {
             {estimatedStart && (
               <p>
                 <strong>Estimated Start:</strong>{' '}
-                {estimatedStart.toLocaleTimeString()}
+                {formatAppointmentTime(data.estimated_start_time)}
               </p>
             )}
 

@@ -12,6 +12,7 @@ import { getProfile } from '@/src/features/patient/api/getProfile';
 
 import { Calendar, FileText, CalendarPlus, Upload, CloudCog } from 'lucide-react';
 import AdmissionStatus from '@/src/features/patient/components/AdmissionStatus';
+import { getWallClockNow } from '@/src/lib/dateUtils';
 
 export default function DashboardHome() {
 
@@ -39,7 +40,7 @@ export default function DashboardHome() {
       setPatientName(profileData.name);
 
       const upcoming = appts.filter((a: any) =>
-        new Date(a.appointment_time) > new Date() &&
+        new Date(a.appointment_time) > getWallClockNow() &&
         a.status === 'SCHEDULED'
       );
 

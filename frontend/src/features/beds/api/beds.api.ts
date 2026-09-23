@@ -5,12 +5,16 @@ export async function getBeds() {
   return res.data;
 }
 
-export async function assignBed(data: { bedId: string; patientId: string }) {
+export async function assignBed(data: {
+  bedId: string;
+  patientId: string;
+  admissionId?: string;
+}) {
   const res = await api.post('/staff/beds/assign', data);
   return res.data;
 }
 
-export async function dischargeBed(bedId: string) {
-  const res = await api.post('/staff/beds/discharge', { bedId });
+export async function dischargeBed(bedId: string, admissionId?: string) {
+  const res = await api.post('/staff/beds/discharge', { bedId, admissionId });
   return res.data;
 }

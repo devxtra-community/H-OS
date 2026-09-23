@@ -7,6 +7,11 @@ import RescheduleModal from './RescheduleModal';
 import { getCurrentAdmission } from '../../patient/api/getCurrentAdmission';
 import { getPrescriptions } from '../../patient/api/getPrescriptions';
 import { useEffect } from 'react';
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+  getWallClockNow,
+} from '@/src/lib/dateUtils';
 
 interface Props {
   appointment: any;
@@ -54,7 +59,7 @@ export default function AppointmentCard({ appointment }: Props) {
   }, [expanded]);
 
   const appointmentDate = new Date(appointment.appointment_time);
-  const now = new Date();
+  const now = getWallClockNow();
 
   const isPast = appointmentDate < now;
 
@@ -75,7 +80,7 @@ export default function AppointmentCard({ appointment }: Props) {
 
           {/* Date */}
           <p className="text-xs text-slate-400 font-medium">
-            {appointmentDate.toLocaleDateString()}
+            {formatAppointmentDate(appointment.appointment_time)}
           </p>
 
           {/* Doctor */}
@@ -90,10 +95,7 @@ export default function AppointmentCard({ appointment }: Props) {
 
           {/* Time */}
           <p className="text-sm text-slate-500 mt-1">
-            {appointmentDate.toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
+            {formatAppointmentTime(appointment.appointment_time)}
           </p>
 
         </div>

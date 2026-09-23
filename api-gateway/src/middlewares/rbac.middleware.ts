@@ -8,7 +8,7 @@ export type Permission =
   | 'MANAGE_BEDS';
 
 const STAFF_ROLE_PERMISSIONS: Record<string, Permission[]> = {
-  DOCTOR: [],
+  DOCTOR: ['MANAGE_BEDS'],
   NURSE: ['MANAGE_BEDS'],
   RECEPTIONIST: ['MANAGE_BEDS'],
 };
