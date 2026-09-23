@@ -3,9 +3,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 export const patientDataProxy = createProxyMiddleware({
   target: process.env.PATIENT_SERVICE_URL || 'http://localhost:3001',
   changeOrigin: true,
-  pathRewrite: {
-    '^/patients': '',
-  },
+  pathRewrite: (path) => `/patients${path}`,
   on: {
     error: (err, req, res) => {
       console.error('[Gateway] patientDataProxy error:', err.message);
