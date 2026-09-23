@@ -69,7 +69,7 @@ export class AdminAuthController {
       res.cookie('staffRefreshToken', refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -150,7 +150,7 @@ export class AdminAuthController {
       res.clearCookie('staffRefreshToken', {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
       });
 

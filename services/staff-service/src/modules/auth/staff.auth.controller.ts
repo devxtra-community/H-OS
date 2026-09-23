@@ -105,7 +105,7 @@ export class StaffAuthController {
       res.cookie('staffRefreshToken', refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -223,7 +223,7 @@ WHERE id = $1
       res.cookie('staffRefreshToken', newRefreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -263,7 +263,7 @@ WHERE id = $1
       res.clearCookie('staffRefreshToken', {
         httpOnly: true,
         secure: isProduction,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
       });
 
