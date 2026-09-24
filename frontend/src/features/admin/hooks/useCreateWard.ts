@@ -8,6 +8,7 @@ export function useCreateWard() {
     mutationFn: createWard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['beds'] });
+      queryClient.invalidateQueries({ queryKey: ['wards'] });
     },
   });
 }
