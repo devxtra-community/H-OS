@@ -1,4 +1,9 @@
 import 'dotenv/config';
+import dns from 'dns';
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {}
+
 import app from './app';
 import logger from './logger';
 import { pool } from './db';

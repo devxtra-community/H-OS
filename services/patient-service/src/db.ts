@@ -1,5 +1,10 @@
 import 'dotenv/config';
+import dns from 'dns';
 import { Pool } from 'pg';
+
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {}
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not defined');
@@ -11,6 +16,9 @@ export const pool = new Pool({
   idleTimeoutMillis: 30000,
   max: 20,
   keepAlive: true,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 pool.on('connect', () => {
