@@ -34,9 +34,15 @@ export class AuthController {
         accessToken: result.accessToken,
         patient: result.user,
       });
-    } catch {
-      return res.status(401).json({
-        error: 'Invalid credentials',
+    } catch (err: any) {
+      console.error('[Patient Auth] Login error:', err?.message || err);
+      if (err?.message === 'Invalid credentials') {
+        return res.status(401).json({
+          error: 'Invalid credentials',
+        });
+      }
+      return res.status(500).json({
+        error: 'Database connection warming up. Please retry.',
       });
     }
   }

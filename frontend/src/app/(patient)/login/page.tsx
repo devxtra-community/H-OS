@@ -7,8 +7,6 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { promise } from 'zod';
-import { resolve } from 'path';
 
 export default function LoginPage() {
   const { loginSuccess } = useAuth();
@@ -26,12 +24,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await loginPatient(email, password);
+      const trimmedEmail = email.trim().toLowerCase();
+      const trimmedPassword = password.trim();
+      const data = await loginPatient(trimmedEmail, trimmedPassword);
       loginSuccess(data);
-      await new Promise(resolve => setTimeout(resolve,50));
+      await new Promise(resolve => setTimeout(resolve, 50));
       router.push('/dashboard');
-    } catch {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || 'Invalid email or password';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -122,12 +123,13 @@ export default function LoginPage() {
                 <label className="text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-teal-600 hover:underline"
+                <button
+                  type="button"
+                  onClick={() => alert('Please contact the hospital reception or administration to reset your patient password.')}
+                  className="text-sm text-teal-600 hover:underline cursor-pointer"
                 >
                   Forgot password?
-                </Link>
+                </button>
               </div>
 
               <div className="relative mt-2">
