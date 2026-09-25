@@ -202,6 +202,28 @@ class StaffService {
 
     return result.rows[0];
   }
+
+  async getAllStaff() {
+    const result = await pool.query(
+      `
+      SELECT 
+        s.id, 
+        s.name, 
+        s.email, 
+        s.department_id, 
+        d.name AS department_name, 
+        s.role, 
+        s.job_title, 
+        s.is_active,
+        s.created_at
+      FROM staff s
+      LEFT JOIN departments d ON s.department_id = d.id
+      ORDER BY s.created_at DESC
+      `
+    );
+
+    return result.rows;
+  }
 }
 
 export const staffService = new StaffService();

@@ -1,36 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { useAdminAuth } from '@/src/features/admin/admin.auth.provider';
-import CreateStaffForm from "@/src/features/admin/components/CreateStaffForm";
-import CreateWardForm from "@/src/features/admin/components/CreateWardForm";
-import CreateRoomForm from "@/src/features/admin/components/CreateRoomForm";
-import CreateBedForm from "@/src/features/admin/components/CreateBedForm";
+import { useStaffList } from '@/src/features/admin/hooks/useStaffList';
+import { useQuery } from '@tanstack/react-query';
+import { getWards, getBeds } from '@/src/features/admin/api/beds.api';
+import { usePharmacyHistory, useBedHistory } from '@/src/features/admin/hooks/useAudits';
 import {
   Shield,
   UserPlus,
   Building2,
-  DoorOpen,
   Bed,
-  Layers,
-  CheckCircle,
+  History,
+  Users,
+  DoorOpen,
+  Pill,
+  ArrowRight,
+  CheckCircle2,
   Activity,
-  Sliders,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
-
-type ActiveTab = 'all' | 'staff' | 'wards' | 'rooms' | 'beds';
 
 export default function AdminDashboard() {
   const { auth } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('all');
-
   const adminEmail = auth.admin?.email || 'Administrator';
   const initial = adminEmail.charAt(0).toUpperCase();
+
+  const { data: staffList, isLoading: staffLoading } = useStaffList();
+  const { data: wards, isLoading: wardsLoading } = useQuery({
+    queryKey: ['wards'],
+    queryFn: getWards,
+  });
+  const { data: beds, isLoading: bedsLoading } = useQuery({
+    queryKey: ['beds'],
+    queryFn: getBeds,
+  });
+  const { data: pharmacyRecords, isLoading: pharmacyLoading } = usePharmacyHistory();
+  const { data: bedRecords, isLoading: bedAuditLoading } = useBedHistory();
+
+  const totalStaff = staffList?.length || 0;
+  const totalWards = wards?.length || 0;
+  const totalBeds = beds?.length || 0;
+  const occupiedBeds = beds?.filter((b: any) => b.status === 'OCCUPIED').length || 0;
+  const totalDispensed = pharmacyRecords?.length || 0;
+  const totalBedLogs = bedRecords?.length || 0;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* Top Header Card */}
-      <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 rounded-2xl hos-gradient-bg flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-indigo-200 shrink-0">
             {initial}
@@ -47,7 +66,7 @@ export default function AdminDashboard() {
               </span>
             </div>
             <p className="text-sm text-gray-500">
-              Hospital infrastructure, staff access control, and facility configuration console.
+              Hospital operations console, access control, facility management, and institutional audit tracking.
             </p>
           </div>
         </div>
@@ -64,232 +83,208 @@ export default function AdminDashboard() {
       </div>
 
       {/* Metrics / Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Staff */}
-        <div
-          onClick={() => setActiveTab('staff')}
-          className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 ${
-            activeTab === 'staff' ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-gray-100'
-          }`}
+        <Link
+          href="/admin/dashboard/staff"
+          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-indigo-200 transition-all flex items-center gap-4 group"
         >
-          <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 shrink-0">
-            <UserPlus size={22} />
+          <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
+            <Users size={22} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Portal</p>
-            <p className="text-base font-bold text-gray-900 truncate">Doctors &amp; Nurses</p>
-            <p className="text-xs text-indigo-600 font-medium">Provision accounts &rarr;</p>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Clinical Staff</p>
+            <p className="text-2xl font-bold text-gray-900">{staffLoading ? '—' : totalStaff}</p>
+            <p className="text-xs text-indigo-600 font-medium group-hover:underline flex items-center gap-1">
+              View Directory &rarr;
+            </p>
           </div>
-        </div>
+        </Link>
 
         {/* Card 2: Wards */}
-        <div
-          onClick={() => setActiveTab('wards')}
-          className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 ${
-            activeTab === 'wards' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-gray-100'
-          }`}
+        <Link
+          href="/admin/dashboard/wards"
+          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all flex items-center gap-4 group"
         >
-          <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 shrink-0">
+          <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0">
             <Building2 size={22} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital Wings</p>
-            <p className="text-base font-bold text-gray-900 truncate">Wards &amp; Units</p>
-            <p className="text-xs text-emerald-600 font-medium">Manage wings &rarr;</p>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital Wards</p>
+            <p className="text-2xl font-bold text-gray-900">{wardsLoading ? '—' : totalWards}</p>
+            <p className="text-xs text-emerald-600 font-medium group-hover:underline flex items-center gap-1">
+              Manage Wings &rarr;
+            </p>
           </div>
-        </div>
+        </Link>
 
-        {/* Card 3: Rooms */}
-        <div
-          onClick={() => setActiveTab('rooms')}
-          className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 ${
-            activeTab === 'rooms' ? 'border-purple-400 ring-2 ring-purple-100' : 'border-gray-100'
-          }`}
+        {/* Card 3: Beds */}
+        <Link
+          href="/admin/dashboard/beds"
+          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-blue-200 transition-all flex items-center gap-4 group"
         >
-          <div className="p-3 rounded-2xl bg-purple-50 text-purple-600 shrink-0">
-            <DoorOpen size={22} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Inpatient Rooms</p>
-            <p className="text-base font-bold text-gray-900 truncate">Room Layout</p>
-            <p className="text-xs text-purple-600 font-medium">Assign rooms &rarr;</p>
-          </div>
-        </div>
-
-        {/* Card 4: Beds */}
-        <div
-          onClick={() => setActiveTab('beds')}
-          className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 ${
-            activeTab === 'beds' ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-100'
-          }`}
-        >
-          <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 shrink-0">
+          <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
             <Bed size={22} />
           </div>
           <div className="min-w-0">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Bed Capacity</p>
-            <p className="text-base font-bold text-gray-900 truncate">Admissions Ready</p>
-            <p className="text-xs text-blue-600 font-medium">Setup beds &rarr;</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {bedsLoading ? '—' : `${occupiedBeds}/${totalBeds}`}
+            </p>
+            <p className="text-xs text-blue-600 font-medium group-hover:underline flex items-center gap-1">
+              Configure Beds &rarr;
+            </p>
+          </div>
+        </Link>
+
+        {/* Card 4: Audits */}
+        <Link
+          href="/admin/dashboard/audits"
+          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all flex items-center gap-4 group"
+        >
+          <div className="p-3 rounded-2xl bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">
+            <History size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Audit Records</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {pharmacyLoading || bedAuditLoading ? '—' : totalDispensed + totalBedLogs}
+            </p>
+            <p className="text-xs text-purple-600 font-medium group-hover:underline flex items-center gap-1">
+              Audit Trails &rarr;
+            </p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Main Module Nav Cards Grid */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold text-gray-900">Administrative Modules</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Module 1: Staff Management */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
+                  <UserPlus size={24} />
+                </div>
+                <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                  Staff Module
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Staff Management &amp; Directory</h3>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Inspect the full registry of registered doctors and nurses, provision new medical practitioner accounts, and control system role permissions.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-medium">
+                {totalStaff} registered practitioners
+              </span>
+              <Link
+                href="/admin/dashboard/staff"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs shadow-indigo-200 transition cursor-pointer"
+              >
+                <span>Open Staff Portal</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Module 2: Ward Infrastructure */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600">
+                  <Building2 size={24} />
+                </div>
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                  Facility Module
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Ward Infrastructure &amp; Rooms</h3>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Establish new operational hospital wards (e.g. ICU, General Ward, Pediatrics), design inpatient room setups, and manage hospital architecture.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-medium">
+                {totalWards} operational wings
+              </span>
+              <Link
+                href="/admin/dashboard/wards"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs shadow-emerald-200 transition cursor-pointer"
+              >
+                <span>Manage Wards</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Module 3: Bed Configuration */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
+                  <Bed size={24} />
+                </div>
+                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                  Capacity Module
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Bed Setup &amp; Capacity Allocation</h3>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Provision bed units inside designated rooms, assign inpatient capacity, and track live occupancy states across all departments.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-medium">
+                {totalBeds} total beds configured
+              </span>
+              <Link
+                href="/admin/dashboard/beds"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs shadow-blue-200 transition cursor-pointer"
+              >
+                <span>Configure Beds</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Module 4: History & Audits */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
+                  <History size={24} />
+                </div>
+                <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">
+                  Compliance &amp; Audits
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">History &amp; Institutional Audits</h3>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Access medication dispensation records (time, medicine, patient, doctor) and complete inpatient bed assignment &amp; discharge history.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-medium">
+                Pharmacy &amp; Bed audit logs
+              </span>
+              <Link
+                href="/admin/dashboard/audits"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs shadow-purple-200 transition cursor-pointer"
+              >
+                <span>View Audits</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Navigation Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <button
-          type="button"
-          onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-            activeTab === 'all'
-              ? 'bg-gray-900 text-white shadow-sm'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          All Modules
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('staff')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'staff'
-              ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <UserPlus size={14} />
-          Staff Provisioning
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('wards')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'wards'
-              ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-200'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <Building2 size={14} />
-          Ward Management
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('rooms')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'rooms'
-              ? 'bg-purple-600 text-white shadow-sm shadow-purple-200'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <DoorOpen size={14} />
-          Room Assignment
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('beds')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'beds'
-              ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
-              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <Bed size={14} />
-          Bed Configuration
-        </button>
-      </div>
-
-      {/* Main Section Content */}
-      <div className="space-y-8">
-        {/* Module 1: Staff Registration */}
-        {(activeTab === 'all' || activeTab === 'staff') && (
-          <section id="staff" className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600">
-                  <UserPlus size={22} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">1. Staff Registration &amp; Access Provisioning</h2>
-                  <p className="text-xs text-gray-500">Create medical practitioner and nurse accounts with department affiliations.</p>
-                </div>
-              </div>
-              <span className="self-start sm:self-auto text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                Staff Module
-              </span>
-            </div>
-
-            <CreateStaffForm />
-          </section>
-        )}
-
-        {/* Module 2: Ward Creation */}
-        {(activeTab === 'all' || activeTab === 'wards') && (
-          <section id="infrastructure" className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600">
-                  <Building2 size={22} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">2. Ward &amp; Wing Infrastructure</h2>
-                  <p className="text-xs text-gray-500">Establish operational hospital wards (e.g. ICU, General Ward, Pediatrics).</p>
-                </div>
-              </div>
-              <span className="self-start sm:self-auto text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                Facility Module
-              </span>
-            </div>
-
-            <CreateWardForm />
-          </section>
-        )}
-
-        {/* Module 3: Room Assignment */}
-        {(activeTab === 'all' || activeTab === 'rooms') && (
-          <section id="rooms" className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
-                  <DoorOpen size={22} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">3. Inpatient Room Setup</h2>
-                  <p className="text-xs text-gray-500">Assign designated rooms to established wards for patient stay.</p>
-                </div>
-              </div>
-              <span className="self-start sm:self-auto text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">
-                Facility Module
-              </span>
-            </div>
-
-            <CreateRoomForm />
-          </section>
-        )}
-
-        {/* Module 4: Bed Setup */}
-        {(activeTab === 'all' || activeTab === 'beds') && (
-          <section id="beds" className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-                  <Bed size={22} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">4. Bed Setup &amp; Capacity Allocation</h2>
-                  <p className="text-xs text-gray-500">Configure bed units inside rooms to enable inpatient admissions and assignments.</p>
-                </div>
-              </div>
-              <span className="self-start sm:self-auto text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                Capacity Module
-              </span>
-            </div>
-
-            <CreateBedForm />
-          </section>
-        )}
       </div>
     </div>
   );

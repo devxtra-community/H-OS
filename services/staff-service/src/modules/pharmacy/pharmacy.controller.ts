@@ -53,4 +53,13 @@ export class PharmacyController {
       res.status(400).json({ error: e.message });
     }
   }
+
+  async getHistory(req: Request, res: Response) {
+    try {
+      const result = await pharmacyService.getDispensedHistory();
+      res.json(result);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  }
 }

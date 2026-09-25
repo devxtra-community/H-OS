@@ -291,6 +291,121 @@ class BedsService {
 
     return result.rows;
   }
+
+  async getBedHistory() {
+    const result = await pool.query(
+      `
+      SELECT
+        ba.id,
+        ba.bed_id,
+        ba.patient_id,
+        ba.admission_id,
+        ba.assigned_at,
+        ba.discharged_at,
+        b.bed_number,
+        b.status AS current_bed_status,
+        r.room_number,
+        w.name AS ward_name
+      FROM bed_assignments ba
+      JOIN beds b ON ba.bed_id = b.id
+      JOIN rooms r ON b.room_id = r.id
+      JOIN wards w ON r.ward_id = w.id
+      ORDER BY ba.assigned_at DESC
+      `
+    );
+
+    const assignments = result.rows;
+    if (assignments.length === 0) return [];
+
+    const patientIds = Array.from(
+      new Set(assignments.map((a) => a.patient_id).filter(Boolean))
+    );
+    const admissionIds = Array.from(
+      new Set(assignments.map((a) => a.admission_id).filter(Boolean))
+    );
+
+    let patientMap = new Map<string, string>();
+    let admissionDoctorMap = new Map<string, string>();
+    let doctorMap = new Map<string, string>();
+
+    try {
+      const promises: Promise<any>[] = [];
+
+      // 1. Fetch patient names from patient-service
+      if (patientIds.length > 0) {
+        promises.push(
+          fetch(`${process.env.PATIENT_SERVICE_URL}/patients/bulk-info`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: patientIds }),
+          })
+            .then((res) => (res.ok ? res.json() : []))
+            .then((data) => {
+              if (Array.isArray(data)) {
+                patientMap = new Map(data.map((p: any) => [p.id, p.name]));
+              }
+            })
+            .catch(() => {})
+        );
+      }
+
+      // 2. Fetch admission records (for doctor_id) from patient-service
+      if (admissionIds.length > 0 || patientIds.length > 0) {
+        promises.push(
+          fetch(`${process.env.PATIENT_SERVICE_URL}/admissions/bulk-info`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admissionIds, patientIds }),
+          })
+            .then((res) => (res.ok ? res.json() : []))
+            .then((data) => {
+              if (Array.isArray(data)) {
+                for (const adm of data) {
+                  if (adm.id && adm.doctor_id) {
+                    admissionDoctorMap.set(adm.id, adm.doctor_id);
+                  }
+                  if (adm.patient_id && adm.doctor_id) {
+                    admissionDoctorMap.set(adm.patient_id, adm.doctor_id);
+                  }
+                }
+              }
+            })
+            .catch(() => {})
+        );
+      }
+
+      await Promise.all(promises);
+
+      // 3. Fetch doctor names from local staff table
+      const doctorIds = Array.from(
+        new Set(Array.from(admissionDoctorMap.values()).filter(Boolean))
+      );
+      if (doctorIds.length > 0) {
+        const staffRes = await pool.query(
+          `SELECT id, name FROM staff WHERE id = ANY($1::uuid[])`,
+          [doctorIds]
+        );
+        doctorMap = new Map(staffRes.rows.map((s: any) => [s.id, s.name]));
+      }
+    } catch (e) {
+      console.error('Failed to enrich bed history:', e);
+    }
+
+    return assignments.map((a) => {
+      const doctorId =
+        (a.admission_id ? admissionDoctorMap.get(a.admission_id) : null) ||
+        (a.patient_id ? admissionDoctorMap.get(a.patient_id) : null);
+
+      return {
+        ...a,
+        patient_name: patientMap.get(a.patient_id) || 'Unknown Patient',
+        doctor_id: doctorId || null,
+        doctor_name: doctorId
+          ? doctorMap.get(doctorId) || 'Attending Physician'
+          : 'Attending Physician',
+      };
+    });
+  }
 }
 
 export const bedsService = new BedsService();

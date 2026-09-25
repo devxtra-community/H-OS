@@ -98,4 +98,17 @@ export class AdmissionController {
       return res.status(500).json({ error: e.message });
     }
   }
+
+  async getBulkAdmissions(req: Request, res: Response) {
+    try {
+      const { admissionIds, patientIds } = req.body;
+      const data = await admissionService.getBulkAdmissions({
+        admissionIds,
+        patientIds,
+      });
+      return res.json(data);
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
 }

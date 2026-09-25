@@ -15,6 +15,8 @@ router.get(
   controller.getAvailability.bind(controller)
 );
 
+router.get('/', controller.getAllStaff.bind(controller));
+
 router.post('/', controller.createStaff.bind(controller));
 
 router.get('/by-id/:id', controller.getStaffById.bind(controller));

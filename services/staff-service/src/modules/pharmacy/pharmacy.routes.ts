@@ -6,6 +6,7 @@ const controller = new PharmacyController();
 
 router.post('/', controller.createPrescription.bind(controller));
 router.get('/pending', controller.getPending.bind(controller));
+router.get('/history', controller.getHistory.bind(controller));
 router.post('/:id/dispense', controller.dispense.bind(controller));
 router.get('/me', controller.getMyPrescriptions.bind(controller));
 

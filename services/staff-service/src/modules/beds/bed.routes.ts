@@ -22,4 +22,6 @@ router.post(
   controller.getActiveAssignments.bind(controller)
 );
 
+router.get('/history', controller.getBedHistory.bind(controller));
+
 export default router;

@@ -16,4 +16,6 @@ router.post('/rooms', controller.createRoom.bind(controller));
 
 router.post('/beds', controller.createBed.bind(controller));
 
+router.get('/history', controller.getBedHistory.bind(controller));
+
 export default router;

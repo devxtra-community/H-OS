@@ -88,4 +88,13 @@ export class BedsController {
 
     res.json(rooms);
   }
+
+  async getBedHistory(req: Request, res: Response) {
+    try {
+      const history = await bedsService.getBedHistory();
+      res.json(history);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  }
 }

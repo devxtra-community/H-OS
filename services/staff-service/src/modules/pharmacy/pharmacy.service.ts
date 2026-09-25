@@ -55,5 +55,13 @@ class PharmacyService {
       items: (p.items || []).filter((item: any) => item.id !== null),
     }));
   }
+
+  async getDispensedHistory() {
+    const prescriptions = await pharmacyRepository.getDispensedHistory();
+    return prescriptions.map((p: any) => ({
+      ...p,
+      items: (p.items || []).filter((item: any) => item.id !== null),
+    }));
+  }
 }
 export const pharmacyService = new PharmacyService();

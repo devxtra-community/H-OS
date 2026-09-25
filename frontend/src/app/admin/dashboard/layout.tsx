@@ -16,6 +16,7 @@ import {
   MoreVertical,
   X,
   ChevronLeft,
+  History,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -26,9 +27,10 @@ import {
 
 const navItems = [
   { label: 'Admin Console', icon: LayoutDashboard, path: '/admin/dashboard' },
-  { label: 'Staff Management', icon: UserPlus, path: '/admin/dashboard#staff' },
-  { label: 'Ward Infrastructure', icon: Building2, path: '/admin/dashboard#infrastructure' },
-  { label: 'Bed Configuration', icon: Bed, path: '/admin/dashboard#beds' },
+  { label: 'Staff Management', icon: UserPlus, path: '/admin/dashboard/staff' },
+  { label: 'Ward Infrastructure', icon: Building2, path: '/admin/dashboard/wards' },
+  { label: 'Bed Configuration', icon: Bed, path: '/admin/dashboard/beds' },
+  { label: 'History & Audits', icon: History, path: '/admin/dashboard/audits' },
 ];
 
 export default function AdminDashboardLayout({
@@ -130,7 +132,10 @@ export default function AdminDashboardLayout({
 
                 <nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto py-2">
                   {navItems.map((item) => {
-                    const isActive = pathname === item.path || (item.path === '/admin/dashboard' && pathname === '/admin/dashboard');
+                    const isActive =
+                      item.path === '/admin/dashboard'
+                        ? pathname === '/admin/dashboard'
+                        : pathname === item.path || pathname.startsWith(item.path + '/');
                     return (
                       <Link
                         key={item.label}
@@ -193,7 +198,10 @@ export default function AdminDashboardLayout({
           {/* Navigation */}
           <nav className="flex flex-1 flex-col items-center gap-2">
             {navItems.map((item) => {
-              const isActive = pathname === item.path || (item.path === '/admin/dashboard' && pathname === '/admin/dashboard');
+              const isActive =
+                item.path === '/admin/dashboard'
+                  ? pathname === '/admin/dashboard'
+                  : pathname === item.path || pathname.startsWith(item.path + '/');
               return (
                 <Tooltip key={item.label} delayDuration={0}>
                   <TooltipTrigger asChild>

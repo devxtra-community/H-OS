@@ -161,6 +161,19 @@ class AdmissionService {
   async getBulkCurrent(patientIds: string[]) {
     return admissionRepository.getBulkCurrent(patientIds);
   }
+
+  async getBulkAdmissions(data: {
+    admissionIds?: string[];
+    patientIds?: string[];
+  }) {
+    if (data.admissionIds && data.admissionIds.length > 0) {
+      return admissionRepository.getAdmissionsByIds(data.admissionIds);
+    }
+    if (data.patientIds && data.patientIds.length > 0) {
+      return admissionRepository.getBulkCurrent(data.patientIds);
+    }
+    return [];
+  }
 }
 
 export const admissionService = new AdmissionService();

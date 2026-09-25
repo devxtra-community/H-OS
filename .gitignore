@@ -26,3 +26,4 @@ Thumbs.db
 .env*
 .agents/
 skills-lock.json
+.railway/

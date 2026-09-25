@@ -182,4 +182,15 @@ export class StaffController {
       return res.status(500).json({ error: 'Failed to fetch doctors' });
     }
   }
+
+  async getAllStaff(req: Request, res: Response) {
+    try {
+      const staffList = await staffService.getAllStaff();
+      return res.json(staffList);
+    } catch (err: any) {
+      return res
+        .status(500)
+        .json({ error: err.message || 'Failed to fetch staff accounts' });
+    }
+  }
 }

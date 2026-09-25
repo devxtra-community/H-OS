@@ -76,10 +76,42 @@ class PharmacyRepository {
 
   async markDispensed(prescriptionId: string) {
     const result = await pool.query(
-      `UPDATE prescriptions SET status = 'DISPENSED' WHERE id = $1 RETURNING *`,
+      `UPDATE prescriptions SET status = 'DISPENSED', dispensed_at = COALESCE(dispensed_at, now()) WHERE id = $1 RETURNING *`,
       [prescriptionId]
     );
     return result.rows[0];
+  }
+
+  async getDispensedHistory() {
+    const result = await pool.query(
+      `
+      SELECT 
+        p.id,
+        p.patient_id,
+        p.patient_name,
+        p.status,
+        p.created_at,
+        COALESCE(p.dispensed_at, p.created_at) AS dispensed_at,
+        s.name AS doctor_name,
+        s.email AS doctor_email,
+        json_agg(json_build_object(
+          'id', pi.id,
+          'item_id', pi.item_id,
+          'quantity', pi.quantity,
+          'instructions', pi.instructions,
+          'item_name', i.name,
+          'category', i.category
+        )) AS items
+      FROM prescriptions p
+      LEFT JOIN staff s ON p.doctor_id = s.id
+      LEFT JOIN prescription_items pi ON p.id = pi.prescription_id
+      LEFT JOIN inventory_items i ON pi.item_id = i.id
+      WHERE p.status = 'DISPENSED'
+      GROUP BY p.id, s.name, s.email
+      ORDER BY COALESCE(p.dispensed_at, p.created_at) DESC
+      `
+    );
+    return result.rows;
   }
 
   async getPrescriptionItems(prescriptionId: string) {

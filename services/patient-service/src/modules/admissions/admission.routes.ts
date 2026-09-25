@@ -21,4 +21,5 @@ router.post(
 router.post('/:id/discharged', controller.completeDischarge.bind(controller));
 router.get('/current', controller.getCurrentAdmission.bind(controller));
 router.post('/bulk-current', controller.getBulkCurrent.bind(controller));
+router.post('/bulk-info', controller.getBulkAdmissions.bind(controller));
 export default router;

@@ -14,6 +14,7 @@ async function startServer() {
   try {
     await pool.query(`
       ALTER TABLE bed_assignments ADD COLUMN IF NOT EXISTS admission_id UUID;
+      ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS dispensed_at TIMESTAMP;
     `);
     logger.info('Database migrations applied successfully');
   } catch (err: any) {
