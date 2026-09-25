@@ -10,8 +10,20 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not defined');
 }
 
+function cleanConnectionString(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('channel_binding');
+    return parsed.toString();
+  } catch {
+    return url
+      .replace(/([?&])channel_binding=[^&]+(&|$)/, '$1')
+      .replace(/[?&]$/, '');
+  }
+}
+
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: cleanConnectionString(process.env.DATABASE_URL),
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
   max: 20,
