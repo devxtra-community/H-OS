@@ -10,7 +10,24 @@ import {
 } from '../../../../features/appointments/hooks/useStaffActions';
 import { useEmergency } from '../../../../features/appointments/hooks/useEmergency';
 import { useRequestAdmission } from '../../../../features/admissions/hooks/useRequestAdmission';
-import { Activity, Clock, Users, Timer, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  Activity,
+  Clock,
+  Users,
+  Timer,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Stethoscope,
+  Pill,
+  Bed,
+  CheckCircle2,
+  Play,
+  RotateCcw,
+  Sparkles,
+  ArrowRight,
+  UserCheck
+} from 'lucide-react';
 import { PrescribeModal } from '../../../../features/pharmacy/components/PrescribeModal';
 import { useDepartments, useDoctorsByDepartment } from '../../../../features/staff/hooks/useStaffData';
 
@@ -37,28 +54,31 @@ export default function QueuePage() {
   const admitMutation = useRequestAdmission();
 
   if (auth.isRestoring) return (
-    <div className="flex justify-center p-8">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-100 border-t-indigo-600" />
     </div>
   );
 
   if (!isDoctor && !selectedDoctorId) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border text-center space-y-6 max-w-2xl mx-auto">
-          <div className="space-y-2">
-            <Activity size={48} className="mx-auto text-indigo-500 opacity-50" />
-            <h2 className="text-2xl font-bold text-slate-800">Staff Check-in Panel</h2>
-            <p className="text-slate-500">Select a department and doctor to manage their queue.</p>
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-200/80 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+            <Activity size={32} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Department</label>
+          <div className="space-y-1.5">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Staff Check-in Panel</h2>
+            <p className="text-sm text-slate-500">Select a specialty department and attending physician to manage their patient queue.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Department</label>
               <select
                 value={selectedDeptId}
                 onChange={(e) => setSelectedDeptId(e.target.value)}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white transition"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white font-medium text-slate-800 transition text-sm"
               >
                 <option value="">Select Department...</option>
                 {departments?.map((dept: any) => (
@@ -67,13 +87,13 @@ export default function QueuePage() {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Doctor</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Doctor</label>
               <select
                 disabled={!selectedDeptId || isLoadingDoctors}
                 onChange={(e) => setSelectedDoctorId(e.target.value)}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 transition"
-                value="" // Keep it as placeholder since we set selectedDoctorId on change
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400 font-medium text-slate-800 transition text-sm"
+                value=""
               >
                 <option value="">
                   {isLoadingDoctors ? 'Loading doctors...' : selectedDeptId ? 'Select Doctor...' : 'Select Department first...'}
@@ -92,19 +112,25 @@ export default function QueuePage() {
   const doctorId = selectedDoctorId;
 
   if (isLoading) return (
-    <div className="flex justify-center p-8">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-100 border-t-indigo-600" />
     </div>
   );
 
   if (!data) return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6 text-slate-500 text-center">
-      No queue found for this doctor.
-      {!isDoctor && (
-        <button onClick={() => setSelectedDoctorId('')} className="block mx-auto mt-4 text-indigo-600 font-medium">
-          Change Doctor
-        </button>
-      )}
+    <div className="max-w-6xl mx-auto py-12">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-8 text-slate-500 text-center space-y-3">
+        <p className="font-semibold text-slate-800">No active queue session found for this physician.</p>
+        {!isDoctor && (
+          <button
+            onClick={() => setSelectedDoctorId('')}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
+          >
+            <RotateCcw size={14} />
+            Switch Doctor
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -112,232 +138,317 @@ export default function QueuePage() {
   const someoneInProgress = queue.some((q: any) => q.status === 'IN_PROGRESS');
 
   return (
-    <div className="space-y-8">
-
-      {/* 🔴 Header */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border">
+    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
-              <Activity size={24} />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white shadow-sm shadow-indigo-500/25">
+            <Activity size={24} />
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                {isDoctor ? "Today's Clinical Queue" : "Staff Check-in Terminal"}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Live Sync
+              </span>
             </div>
-            {isDoctor ? "Today's Queue" : "Staff Check-in"}
-          </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Real-time patient flow, triage status, and consultation controls
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5">
           {!isDoctor && (
             <button
               onClick={() => setSelectedDoctorId('')}
-              className="px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition"
             >
+              <RotateCcw size={14} />
               Switch Doctor
             </button>
           )}
-        </div>
 
-        <button
-          onClick={() => setShowEmergency(true)}
-          className="flex items-center gap-2 bg-red-600 text-white px-5 py-2.5 rounded-xl shadow hover:bg-red-700 transition font-medium"
-        >
-          <AlertCircle size={20} />
-          Emergency Case
-        </button>
+          <button
+            onClick={() => setShowEmergency(true)}
+            className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-rose-500/25 transition cursor-pointer"
+          >
+            <AlertCircle size={16} />
+            <span>Emergency Case</span>
+          </button>
+        </div>
       </div>
 
       {/* Doctor Status Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <div className="bg-white border rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-          <div className="p-3 rounded-xl bg-blue-100 text-blue-600"><Users size={22} /></div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-blue-50 text-blue-600 shrink-0">
+            <Users size={22} />
+          </div>
           <div>
-            <p className="text-sm text-slate-500">Total Appointments</p>
-            <p className="text-xl font-bold">{doctor_status.total_appointments}</p>
+            <p className="text-xs text-slate-500 font-medium">Total Appointments</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{doctor_status.total_appointments}</p>
           </div>
         </div>
 
-        <div className="bg-white border rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-          <div className="p-3 rounded-xl bg-green-100 text-green-600"><CheckCircle size={22} /></div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
+            <UserCheck size={22} />
+          </div>
           <div>
-            <p className="text-sm text-slate-500">Checked In</p>
-            <p className="text-xl font-bold">{doctor_status.checked_in_count}</p>
+            <p className="text-xs text-slate-500 font-medium">Checked In</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{doctor_status.checked_in_count}</p>
           </div>
         </div>
 
-        <div className="bg-white border rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-          <div className="p-3 rounded-xl bg-amber-100 text-amber-600"><Clock size={22} /></div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-600 shrink-0">
+            <Clock size={22} />
+          </div>
           <div>
-            <p className="text-sm text-slate-500">Current Delay</p>
-            <p className="text-xl font-bold">{doctor_status.doctor_delay_minutes} min</p>
+            <p className="text-xs text-slate-500 font-medium">Schedule Delay</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{doctor_status.doctor_delay_minutes} min</p>
           </div>
         </div>
 
-        <div className="bg-white border rounded-2xl p-6 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-          <div className="p-3 rounded-xl bg-purple-100 text-purple-600"><Timer size={22} /></div>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-purple-50 text-purple-600 shrink-0">
+            <Timer size={22} />
+          </div>
           <div>
-            <p className="text-sm text-slate-500">Remaining Time</p>
-            <p className="text-xl font-bold">{doctor_status.remaining_queue_minutes} min</p>
+            <p className="text-xs text-slate-500 font-medium">Remaining Queue</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-0.5">{doctor_status.remaining_queue_minutes} min</p>
           </div>
         </div>
-
       </div>
 
       {/* Queue List */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span>Queued Patients</span>
+            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+              {queue.length}
+            </span>
+          </h2>
+        </div>
+
         {queue.length === 0 ? (
-          <div className="bg-white rounded-2xl border shadow-sm p-6 text-slate-500 text-center">
-            {isDoctor ? "No patients ready for consultation." : "No upcoming appointments for this doctor."}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <CheckCircle2 size={24} />
+            </div>
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">
+                {isDoctor ? "No patients waiting in queue." : "No upcoming appointments for this doctor."}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                New checked-in visits will populate automatically in real-time.
+              </p>
+            </div>
           </div>
-        ) : queue.map((item: any) => (
-          <div
-            key={item.id}
-            className={`p-6 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition ${item.priority === 'HIGH'
-              ? 'bg-rose-50 border-rose-200'
-              : item.is_current
-                ? 'bg-emerald-50 border-emerald-200'
-                : 'bg-white hover:shadow-md'
-              }`}
-          >
+        ) : (
+          <div className="space-y-3">
+            {queue.map((item: any) => {
+              const isEmergency = item.priority === 'HIGH';
+              const isInProgress = item.status === 'IN_PROGRESS';
 
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold border border-slate-300">
-                {item.patient_name?.charAt(0) || '?'}
-              </div>
-              <div>
-                <p className="font-bold text-slate-800 text-lg">
-                  {item.patient_name} <span className="text-sm font-normal text-slate-500">({item.patient_id.split('-')[0]}...)</span>
-                </p>
-                <div className="flex gap-2 mt-1">
-                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${item.status === 'SCHEDULED' ? 'bg-slate-100 text-slate-700 border-slate-200' :
-                    item.status === 'CHECKED_IN' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                      item.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                        'bg-gray-100 text-gray-700 border-gray-200'
+              return (
+                <div
+                  key={item.id}
+                  className={`p-5 rounded-2xl border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200 ${
+                    isEmergency
+                      ? 'bg-rose-50/70 border-rose-200 ring-1 ring-rose-300'
+                      : isInProgress
+                        ? 'bg-blue-50/60 border-blue-200 ring-1 ring-blue-300'
+                        : 'bg-white border-slate-200/80 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm shadow-xs ${
+                      isEmergency
+                        ? 'bg-rose-600 text-white'
+                        : isInProgress
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-700'
                     }`}>
-                    {item.status.replace('_', ' ')}
-                  </span>
-                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full border bg-slate-100 text-slate-600 border-slate-200">
-                    Pos: {item.position}
-                  </span>
+                      {item.patient_name?.charAt(0) || 'P'}
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-slate-900 text-base">
+                          {item.patient_name}
+                        </p>
+                        <span className="text-xs text-slate-400">
+                          (ID: {item.patient_id.slice(0, 8)}...)
+                        </span>
+
+                        {isEmergency && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span>
+                            EMERGENCY
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
+                          item.status === 'SCHEDULED' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                          item.status === 'CHECKED_IN' ? 'bg-amber-50 text-amber-700 border-amber-200/70' :
+                          item.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-700 border-blue-200/70' :
+                          'bg-emerald-50 text-emerald-700 border-emerald-200/70'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            item.status === 'SCHEDULED' ? 'bg-slate-400' :
+                            item.status === 'CHECKED_IN' ? 'bg-amber-500' :
+                            item.status === 'IN_PROGRESS' ? 'bg-blue-500 animate-pulse' :
+                            'bg-emerald-500'
+                          }`} />
+                          {item.status.replace('_', ' ')}
+                        </span>
+
+                        <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full border bg-slate-50 text-slate-600 border-slate-200">
+                          Queue Pos: #{item.position}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2.5 flex-wrap border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                    {/* Check In - STAFF ONLY */}
+                    {!isDoctor && item.status === 'SCHEDULED' && (
+                      <button
+                        onClick={() => checkInMutation.mutate(item.id)}
+                        disabled={checkInMutation.isPending}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold transition shadow-xs disabled:opacity-50"
+                      >
+                        <UserCheck size={14} />
+                        {checkInMutation.isPending ? 'Checking In...' : 'Check In'}
+                      </button>
+                    )}
+
+                    {/* Start Consultation - DOCTOR ONLY */}
+                    {isDoctor && item.status === 'CHECKED_IN' && !someoneInProgress && (
+                      <button
+                        onClick={() => startMutation.mutate(item.id)}
+                        disabled={startMutation.isPending}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition shadow-xs disabled:opacity-50"
+                      >
+                        <Play size={14} />
+                        {startMutation.isPending ? 'Starting...' : 'Start Consult'}
+                      </button>
+                    )}
+
+                    {/* Complete Consultation - DOCTOR ONLY */}
+                    {isDoctor && item.status === 'IN_PROGRESS' && (
+                      <>
+                        <button
+                          onClick={() => setPrescribePatient({ id: item.patient_id, name: item.patient_name })}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition"
+                        >
+                          <Pill size={14} />
+                          Prescribe
+                        </button>
+
+                        <button
+                          onClick={() => completeMutation.mutate(item.id)}
+                          disabled={completeMutation.isPending}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition shadow-xs disabled:opacity-50"
+                        >
+                          <CheckCircle size={14} />
+                          {completeMutation.isPending ? 'Completing...' : 'Complete'}
+                        </button>
+
+                        {/* Admit Patient */}
+                        {item.admission_requested ? (
+                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-medium border border-slate-200 cursor-not-allowed">
+                            <Bed size={14} />
+                            Admit Requested
+                          </span>
+                        ) : (
+                          <button
+                            disabled={admitMutation.isPending}
+                            onClick={() =>
+                              admitMutation.mutate({
+                                patientId: item.patient_id,
+                                doctorId: doctorId as string,
+                                departmentId: auth.staff?.department_id as string
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition disabled:opacity-50"
+                          >
+                            <Bed size={14} />
+                            {admitMutation.isPending ? 'Requesting...' : 'Admit Patient'}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 flex-wrap">
-
-              {/* Check In - STAFF ONLY */}
-              {!isDoctor && item.status === 'SCHEDULED' && (
-                <button
-                  onClick={() => checkInMutation.mutate(item.id)}
-                  className="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl text-sm font-medium transition shadow-sm"
-                >
-                  Check In
-                </button>
-              )}
-
-              {/* Start Consultation - DOCTOR ONLY */}
-              {isDoctor && item.status === 'CHECKED_IN' && !someoneInProgress && (
-                <button
-                  onClick={() => startMutation.mutate(item.id)}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
-                >
-                  Start Consult
-                </button>
-              )}
-
-              {/* Complete Consultation - DOCTOR ONLY */}
-              {isDoctor && item.status === 'IN_PROGRESS' && (
-                <>
-                  <button
-                    onClick={() => setPrescribePatient({ id: item.patient_id, name: item.patient_name })}
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
-                  >
-                    Prescribe
-                  </button>
-
-                  <button
-                    onClick={() => completeMutation.mutate(item.id)}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm"
-                  >
-                    Complete
-                  </button>
-
-                  {/* 🏥 Admit Patient */}
-                  {item.admission_requested ? (
-                    <span className="px-5 py-2.5 bg-slate-100 text-slate-500 rounded-xl text-sm font-medium border border-slate-200 cursor-not-allowed shadow-sm">
-                      Request Sent
-                    </span>
-                  ) : (
-                    <button
-                      disabled={admitMutation.isPending}
-                      onClick={() =>
-                        admitMutation.mutate({
-                          patientId: item.patient_id,
-                          doctorId: doctorId as string,
-                          departmentId: auth.staff?.department_id as string
-                        })
-                      }
-                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50 shadow-sm"
-                    >
-                      {admitMutation.isPending
-                        ? 'Admitting...'
-                        : 'Admit Patient'}
-                    </button>
-                  )}
-                </>
-              )}
-
-            </div>
-
+              );
+            })}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* 🔴 Emergency Modal */}
+      {/* Emergency Modal */}
       {showEmergency && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-3xl w-full max-w-md space-y-6 shadow-2xl">
-
-            <div className="flex items-center gap-3 border-b pb-4">
-              <div className="p-3 bg-red-100 text-red-600 rounded-full">
-                <AlertCircle size={24} />
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-md space-y-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+                <AlertTriangle size={24} />
               </div>
-              <h2 className="text-xl font-bold text-slate-800">
-                Create Emergency Case
-              </h2>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Register Emergency Case
+                </h2>
+                <p className="text-xs text-slate-500">Bypasses queue position for immediate triage</p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Patient ID</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Patient UUID / Reference</label>
               <input
                 type="text"
-                placeholder="Enter full UUID..."
+                placeholder="Enter patient ID..."
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition text-sm"
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
               <button
                 onClick={() => setShowEmergency(false)}
-                className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 font-medium text-slate-700 transition"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-xs text-slate-700 transition"
               >
                 Cancel
               </button>
 
               <button
+                disabled={!patientId.trim() || emergencyMutation.isPending}
                 onClick={() => {
                   emergencyMutation.mutate(patientId);
                   setShowEmergency(false);
                   setPatientId('');
                 }}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium shadow-md transition"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold text-xs shadow-sm transition disabled:opacity-50"
               >
-                Confirm Case
+                {emergencyMutation.isPending ? 'Registering...' : 'Confirm Emergency'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🔴 Prescribe Modal */}
+      {/* Prescribe Modal */}
       {prescribePatient && (
         <PrescribeModal
           patientId={prescribePatient.id}
@@ -345,7 +456,6 @@ export default function QueuePage() {
           onClose={() => setPrescribePatient(null)}
         />
       )}
-
     </div>
   );
 }
