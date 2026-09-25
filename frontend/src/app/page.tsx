@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Clock,
   Menu,
-  Phone,
   Plus,
   Smile,
   Star,
@@ -20,8 +19,11 @@ import {
   X,
   Award,
   Heart,
-  Sliders,
-  Sparkles,
+  Activity,
+  BedDouble,
+  Pill,
+  ShieldCheck,
+  Building2,
 } from 'lucide-react';
 
 const fadeInUp: Variants = {
@@ -50,86 +52,86 @@ export default function LandingPage() {
 
   const stats = [
     {
+      icon: Building2,
+      value: '7',
+      label: 'Clinical Departments',
+    },
+    {
       icon: Clock,
-      value: '10+',
-      label: 'Years Experience',
+      value: '24/7',
+      label: 'Emergency & ICU Wards',
     },
     {
-      icon: User,
-      value: '5000+',
-      label: 'Patients Treated',
-    },
-    {
-      icon: Users,
-      value: '50+',
-      label: 'Specialists',
+      icon: Pill,
+      value: '100%',
+      label: 'Digital e-Prescriptions',
     },
     {
       icon: Smile,
-      value: '100%',
-      label: 'Patient Satisfaction',
+      value: '15 min',
+      label: 'Avg Consultation Queue',
     },
   ];
 
-  const partners = [
-    'FeatherDev',
-    'Spherule',
-    'GlobalBank',
-    'Nietzsche',
-    'Boltshift',
+  const standards = [
+    'HL7 / FHIR Ready',
+    'HIPAA Compliant',
+    'Live Bed Telemetry',
+    'Digital Pharmacy Engine',
+    'Neon Cloud Postgres',
   ];
 
   const faqs = [
     {
-      q: 'How do I book an appointment?',
-      a: 'Easily schedule your appointment online through our portal. Select your medical department, choose an available specialist, and pick a date and time that fits your schedule. You can manage and reschedule bookings anytime.',
+      q: 'How do I book an appointment with a specialist?',
+      a: 'Sign into the Patient Portal or click "Book An Appointment". Select your clinical department (Cardiology, Orthopedics, Neurology, Pediatrics, General Medicine), choose your doctor, and select an available time slot. Your booking is confirmed immediately.',
     },
     {
-      q: 'Do you offer online or telehealth consultations?',
-      a: 'Yes, our certified practitioners offer secure video consultations with automated digital e-prescriptions and clinical visit summaries synced directly to your patient records.',
+      q: 'How does the doctor consultation queue work?',
+      a: 'When you arrive for your scheduled visit or check in online, you enter the doctor’s live queue. Doctors manage priority triage (Normal and Emergency) with integrated consultation timers and real-time status updates.',
     },
     {
-      q: 'What insurance plans do you accept?',
-      a: 'We accept all major health insurance providers and medical networks. Clear digital itemized statements and claims paperwork are available directly in your account.',
+      q: 'What happens if a patient requires inpatient admission?',
+      a: 'The consulting physician requests an admission directly in the system. Hospital staff review the queue, assign an available bed in the General ICU or designated Ward, and manage the full inpatient care cycle until discharge.',
     },
     {
-      q: 'Are your doctors qualified specialists?',
-      a: 'All our clinicians are board-certified specialists with extensive hospital experience across their respective medical domains.',
+      q: 'How does the hospital pharmacy dispense medications?',
+      a: 'During consultation, physicians generate electronic prescriptions linked directly to hospital inventory. When the patient visits the hospital pharmacy, staff verify the prescription, check real-time batch stock, and mark the order as dispensed.',
     },
     {
-      q: 'What should I bring for my first visit?',
-      a: 'Please bring your government ID, insurance card, and any relevant prior test results or medications. If you have registered online, your profile is already synced.',
+      q: 'Can patients upload and view their medical documents?',
+      a: 'Yes. Patients can securely upload diagnostic reports, blood test results, and medical records to their profile. All clinical history, allergies, blood group, and emergency contacts are encrypted and accessible to treating doctors.',
     },
     {
-      q: 'How is patient medical privacy protected?',
-      a: 'Our systems utilize enterprise HIPAA-compliant architecture, encrypted medical record handling, and strictly audited clinical access logs.',
+      q: 'How is clinical data and patient privacy secured?',
+      a: 'H-OS is architected with strict role-based access control (RBAC), database encryption at rest, secure session tokens, and tamper-resistant inventory transaction audit logs.',
     },
   ];
 
   const testimonials = [
     {
       name: 'Daniel Thompson',
-      role: 'Visitor',
+      role: 'Outpatient Care',
       comment:
-        'The doctors truly care, explain clearly, and make me comfortable. Support that really listens.',
+        'Booking with Cardiology took under a minute. When I met the doctor, my complete allergy profile and medical history were already on screen.',
     },
     {
       name: 'Ryan Mitchell',
-      role: 'Patient',
+      role: 'Pharmacy & Follow-up',
       comment:
-        'I booked follow-ups online with quick communication and punctual doctors. Highly recommended.',
+        'The doctor prescribed my medication digitally, and by the time I walked down to the hospital dispensary, it was already verified and ready.',
     },
     {
-      name: 'Joshua Reed',
-      role: 'Patient',
+      name: 'Dr. Sarah Connor',
+      role: 'Chief Medical Officer',
       comment:
-        'My experience was excellent. Everyone was kind and understanding, and managing everything online was easy.',
+        'H-OS transformed our clinical floor. The consultation queue is predictable, emergency admissions are prioritized instantly, and ward bed tracking is live.',
     },
     {
       name: 'Emily Rogers',
-      role: 'Visitor',
+      role: 'Pediatric Care',
       comment:
-        'I’m impressed with the professional team. Scheduling online was easy, and the doctors made me feel supported.',
+        'Scheduling checkups and tracking vaccination schedules for my children has never been this straightforward. Caring doctors and no chaotic waiting rooms.',
     },
   ];
 
@@ -148,7 +150,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 z-0">
           <img
             src="https://framerusercontent.com/images/yrivhbAv1ml2wj4JezJhA7eOo8.png"
-            alt="Modern Hospital Architecture at Dusk"
+            alt="H-OS Hospital Architecture at Dusk"
             className="w-full h-full object-cover object-center brightness-85"
           />
           {/* Subtle gradient vignette to guarantee left-aligned text legibility */}
@@ -165,30 +167,30 @@ export default function LandingPage() {
                 <Plus className="w-6 h-6 stroke-[3]" />
               </div>
               <span className="text-2xl font-bold tracking-tight text-white">
-                Healcure
+                H-OS
               </span>
             </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/80">
               <a href="#services" className="hover:text-white transition-colors">
-                Home
+                Departments
               </a>
               <a href="#about" className="hover:text-white transition-colors">
-                About
+                System Overview
               </a>
-              <a href="#services" className="hover:text-white transition-colors">
-                Services
-              </a>
-              <a href="#facilities" className="hover:text-white transition-colors">
-                Facilities
+              <a href="#workflow" className="hover:text-white transition-colors">
+                Clinical Workflow
               </a>
               <a href="#portals" className="hover:text-white transition-colors">
                 Portals
               </a>
+              <a href="#faq" className="hover:text-white transition-colors">
+                FAQ
+              </a>
             </nav>
 
-            {/* Right Action Button */}
+            {/* Right Action Buttons */}
             <div className="hidden md:flex items-center gap-4">
               <Link
                 href="/staff/login"
@@ -230,21 +232,21 @@ export default function LandingPage() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-1 hover:text-white"
                   >
-                    Services
+                    Departments
                   </a>
                   <a
                     href="#about"
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-1 hover:text-white"
                   >
-                    About Us
+                    System Overview
                   </a>
                   <a
-                    href="#facilities"
+                    href="#workflow"
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-1 hover:text-white"
                   >
-                    Facilities
+                    Clinical Workflow
                   </a>
                   <a
                     href="#portals"
@@ -286,10 +288,10 @@ export default function LandingPage() {
             {/* Pill Eyebrow */}
             <motion.div variants={fadeInUp}>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium tracking-wide bg-white/10 border border-white/15 text-white/90 backdrop-blur-xs">
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white">
-                  Trusted
+                <span className="bg-[#1A5ABA] px-2 py-0.5 rounded-full text-[11px] font-semibold text-white">
+                  H-OS
                 </span>
-                <span>20,000+ Patients Worldwide</span>
+                <span>Hospital Operating System</span>
               </div>
             </motion.div>
 
@@ -308,7 +310,7 @@ export default function LandingPage() {
               variants={fadeInUp}
               className="text-base sm:text-lg text-white/80 font-normal leading-relaxed max-w-xl"
             >
-              Take charge of your well-being and explore the many advantages of modern healthcare through our trusted platform.
+              Manage patient appointments, doctor consultation queues, inpatient ward beds, and digital pharmacy dispensation in one unified hospital operating system.
             </motion.p>
 
             {/* Buttons */}
@@ -344,7 +346,7 @@ export default function LandingPage() {
                   <img
                     key={i}
                     src={src}
-                    alt="Patient review"
+                    alt="Clinical team verified"
                     className="w-8 h-8 rounded-full border-2 border-[#0B1320] object-cover"
                   />
                 ))}
@@ -361,23 +363,23 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <span className="text-xs text-white/70 font-medium mt-0.5">
-                  Based on 20K+ Reviews
+                  Verified Hospital Clinical Outcomes
                 </span>
               </div>
             </motion.div>
           </motion.div>
         </div>
 
-        {/* -------------------- Hero Bottom Partner Logos -------------------- */}
+        {/* -------------------- Hero Bottom Clinical Standards Bar -------------------- */}
         <div className="relative z-10 w-full border-t border-white/10 py-6 px-4 sm:px-8 max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-white/60">
-          <span className="font-medium text-white/50">Proudly worked with:</span>
+          <span className="font-medium text-white/50">Integrated Standards:</span>
           <div className="flex flex-wrap items-center gap-8 sm:gap-12 opacity-80">
-            {partners.map((partner, index) => (
+            {standards.map((std, index) => (
               <span
                 key={index}
                 className="font-semibold tracking-wide text-white/70 hover:text-white transition-colors"
               >
-                {partner}
+                {std}
               </span>
             ))}
           </div>
@@ -423,7 +425,7 @@ export default function LandingPage() {
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
             <span className="text-xs font-semibold text-[#1A5ABA] uppercase tracking-wider">
-              ◆ About Us
+              ◆ About H-OS
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
               Here’s What Sets Us Apart
@@ -431,14 +433,14 @@ export default function LandingPage() {
               from Standard Clinics
             </h2>
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-              At our clinic, we’re driven by a commitment to transform lives through knowledge, care, and compassion.
+              Driven by clinical precision, real-time bed telemetry, and seamless doctor-patient workflows.
             </p>
             <div className="pt-2">
               <Link
                 href="/login"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1A5ABA] hover:bg-[#154897] text-white text-sm font-semibold transition-all shadow-sm"
               >
-                <span>Read More About Us</span>
+                <span>Explore Hospital System</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -451,13 +453,13 @@ export default function LandingPage() {
               <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xs flex-1 flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1A5ABA] flex items-center justify-center mb-6">
-                    <Star className="w-5 h-5 fill-[#1A5ABA]" />
+                    <Clock className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    30+ years of expertise
+                    Real-Time Doctor Queues
                   </h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Trusted care with consistent, proven outcomes and medical service delivered worldwide over decades.
+                    Dynamic patient consultation queues with normal and emergency priority triage, live check-in tracking, and consultation duration management.
                   </p>
                 </div>
               </div>
@@ -465,13 +467,13 @@ export default function LandingPage() {
               <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xs flex-1 flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1A5ABA] flex items-center justify-center mb-6">
-                    <Users className="w-5 h-5" />
+                    <BedDouble className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Expert Medical Team
+                    Inpatient Ward & Bed Telemetry
                   </h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Highly skilled professionals providing reliable, safe, and compassionate medical care with proven excellence.
+                    Live bed availability across Intensive Care Units (ICU) and General Wards with instant patient admission and discharge request coordination.
                   </p>
                 </div>
               </div>
@@ -481,7 +483,7 @@ export default function LandingPage() {
             <div className="lg:col-span-4 rounded-3xl overflow-hidden shadow-xs border border-slate-200/80 min-h-[420px] lg:min-h-full">
               <img
                 src="https://framerusercontent.com/images/OomZnQqqJpejEmBnGXgKtRvCwT8.png"
-                alt="Medical staff walking together in hospital hallway"
+                alt="Hospital clinical staff in hospital hallway"
                 className="w-full h-full object-cover object-center"
               />
             </div>
@@ -491,13 +493,13 @@ export default function LandingPage() {
               <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xs flex-1 flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1A5ABA] flex items-center justify-center mb-6">
-                    <Heart className="w-5 h-5 fill-[#1A5ABA]" />
+                    <Pill className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Patient-Focused Care
+                    Integrated Digital Pharmacy
                   </h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Personalized treatment plans designed for comfort, faster recovery, and an enhanced patient experience.
+                    Physicians generate electronic prescriptions connected directly to pharmacy stock levels, enabling verified batch dispensation without delays.
                   </p>
                 </div>
               </div>
@@ -505,13 +507,13 @@ export default function LandingPage() {
               <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xs flex-1 flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1A5ABA] flex items-center justify-center mb-6">
-                    <Stethoscope className="w-5 h-5" />
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Advanced Technology
+                    Centralized Patient Records
                   </h3>
                   <p className="text-sm text-slate-600 leading-relaxed">
-                    Advanced medical technology and systems delivering accurate diagnosis and consistent results.
+                    Comprehensive patient health profiles including allergies, blood group, chronic conditions, and encrypted clinical document uploads.
                   </p>
                 </div>
               </div>
@@ -526,7 +528,7 @@ export default function LandingPage() {
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span className="text-xs font-semibold text-[#1A5ABA] uppercase tracking-wider">
-              ◆ Our Services
+              ◆ Clinical Departments
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
               Comprehensive
@@ -536,7 +538,7 @@ export default function LandingPage() {
               for Every Need
             </h2>
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-              Get expert medical and mental healthcare anytime, anywhere with trusted professionals and digital ease.
+              Specialized departments staffed by certified physicians and integrated with real-time diagnostic queues.
             </p>
           </div>
 
@@ -560,7 +562,7 @@ export default function LandingPage() {
             {/* Content */}
             <div className="lg:col-span-6 space-y-6">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1A5ABA] border border-blue-200/60">
-                Pediatrics
+                Pediatrics Department
               </span>
 
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
@@ -568,16 +570,16 @@ export default function LandingPage() {
               </h3>
 
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                Our pediatrics department ensures your child’s healthy growth, development, and emotional well-being through preventive and personalized care.
+                Our pediatrics department ensures your child’s healthy growth, development, and emotional well-being through preventive care and continuous medical support.
               </p>
 
               <ul className="space-y-3 pt-2">
                 {[
                   'Wellness checkups and vaccination programs',
-                  'Growth and nutrition monitoring',
-                  'Child developmental assessment',
-                  'Preventive care and family education',
-                  '24×7 pediatric emergency support',
+                  'Growth, nutrition, and developmental assessments',
+                  'Routine health screenings and pediatric allergy monitoring',
+                  'Dedicated pediatric doctor consultation queue',
+                  '24×7 pediatric emergency ward admission support',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-slate-700 font-medium">
                     <div className="w-4 h-4 rounded-full bg-blue-100 text-[#1A5ABA] flex items-center justify-center shrink-0 mt-0.5">
@@ -590,7 +592,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Service Block 2: Two Split Cards (Orthopedics & Gastroenterology) */}
+          {/* Service Block 2: Two Split Cards (Orthopedics & General Medicine) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Card A: Orthopedics */}
             <motion.div
@@ -602,13 +604,13 @@ export default function LandingPage() {
             >
               <div className="space-y-4">
                 <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1A5ABA] border border-blue-200/60">
-                  Orthopedics
+                  Orthopedics & Surgery
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
                   Advanced Bone and Joint Care for Better Mobility
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  From sports injuries to complex orthopedic surgeries, we restore confidence in your movement with cutting-edge diagnostics and physical therapy.
+                  From sports injuries and fracture management to complex orthopedic procedures, our specialists restore strength and mobility with personalized clinical rehabilitation.
                 </p>
               </div>
 
@@ -621,7 +623,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Card B: Gastroenterology */}
+            {/* Card B: General Medicine & Diagnostics */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -632,28 +634,28 @@ export default function LandingPage() {
               <div className="rounded-2xl overflow-hidden h-64 sm:h-72 shadow-xs border border-slate-200/60">
                 <img
                   src="https://framerusercontent.com/images/OhVZTS3dElIxK1Zxpz5HIggHQA8.png"
-                  alt="Doctor showing digestive tablet diagram to patient"
+                  alt="Doctor reviewing diagnostic findings with patient"
                   className="w-full h-full object-cover object-center"
                 />
               </div>
 
               <div className="space-y-4">
                 <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1A5ABA] border border-blue-200/60">
-                  Gastroenterology
+                  General Medicine & Cardiology
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
-                  Digestive Health and Wellness, Simplified
+                  Digestive Health, Cardiology & Primary Care
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Focused on diagnosing and treating gastrointestinal conditions through advanced endoscopy, diet planning, and holistic digestive care.
+                  Comprehensive internal medicine diagnostics, cardiovascular management, chronic disease prevention, and direct e-prescription coordination.
                 </p>
                 <ul className="space-y-2.5 pt-1">
                   {[
-                    'Endoscopy and colonoscopy diagnostics',
-                    'Nutrition and dietary management',
-                    'Liver, pancreas, and gut disorder care',
-                    'Lifestyle consultation for digestion',
-                    'Preventive screening and health education',
+                    'Cardiology vitals and chronic disease care',
+                    'Diagnostic lab review & radiology assessments',
+                    'Direct electronic prescription generation',
+                    'Medication review with pharmacy stock integration',
+                    'Inpatient ICU and ward transfer coordination',
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 font-medium">
                       <div className="w-4 h-4 rounded-full bg-blue-100 text-[#1A5ABA] flex items-center justify-center shrink-0 mt-0.5">
@@ -709,7 +711,7 @@ export default function LandingPage() {
                   Patient Portal
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Book and reschedule appointments, review digital prescriptions, and view diagnostic visit transcripts.
+                  Book and reschedule appointments, monitor live doctor queue status, view verified e-prescriptions, and securely manage your medical profile.
                 </p>
               </div>
 
@@ -753,7 +755,7 @@ export default function LandingPage() {
                   Staff & Doctors Portal
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Doctor consultation queues, inpatient ward and bed occupancy, and pharmacy medicine dispensation.
+                  Doctor consultation queues, emergency triage, inpatient ward bed assignments, and pharmacy medicine stock dispensation.
                 </p>
               </div>
 
@@ -776,13 +778,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* -------------------- How It Works (4 Clean Steps) -------------------- */}
-      <section className="py-24 sm:py-32 bg-white border-t border-slate-200/80">
+      {/* -------------------- Clinical Workflow (4 Clean Steps) -------------------- */}
+      <section id="workflow" className="py-24 sm:py-32 bg-white border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-16">
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span className="text-xs font-semibold text-[#1A5ABA] uppercase tracking-wider">
-              ◆ How It Works
+              ◆ Clinical Workflow
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
               Simple Steps to Better Care,
@@ -790,7 +792,7 @@ export default function LandingPage() {
               from Booking to Recovery.
             </h2>
             <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-              From booking an appointment to follow-up care, we guide you every step of the way.
+              From appointment scheduling to inpatient recovery and digital prescription pickup, H-OS guides each stage.
             </p>
           </div>
 
@@ -798,23 +800,23 @@ export default function LandingPage() {
             {[
               {
                 num: '01',
-                title: 'Book Appointment',
-                desc: 'Easily schedule your visit online or by phone. Choose a time that fits your routine, and our team ensures the booking process stays smooth and stress-free.',
+                title: 'Online Appointment',
+                desc: 'Select your clinical department, choose an available specialist, and pick a convenient time slot without hospital waiting lines.',
               },
               {
                 num: '02',
-                title: 'Consultation',
-                desc: 'Meet with our caring specialists who listen closely to your concerns and history. Together, we’ll create a clear path toward better health with guidance you can trust.',
+                title: 'Clinical Consultation',
+                desc: 'Consult with your physician who reviews symptoms, examines medical records, and enters real-time clinical notes.',
               },
               {
                 num: '03',
-                title: 'Treatment',
-                desc: 'Receive a personalized treatment plan tailored to your needs. Our modern facilities and expert team ensure you get safe, effective, and compassionate care at every step.',
+                title: 'Ward or Pharmacy',
+                desc: 'If medication is needed, e-prescriptions sync to pharmacy stock. If admission is required, ward beds are allocated instantly.',
               },
               {
                 num: '04',
-                title: 'Follow-up',
-                desc: 'We stay connected even after treatment. Through regular check-ins and ongoing support, we make sure your recovery stays on track and your long-term health thrives.',
+                title: 'Discharge & Follow-up',
+                desc: 'Coordinated discharge requests, digital instructions, and follow-up consultation reminders keep patient recovery on track.',
               },
             ].map((step, idx) => (
               <div
@@ -843,12 +845,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <span className="text-xs font-semibold text-[#1A5ABA] uppercase tracking-wider">
-              ◆ Client Experiences
+              ◆ Clinical Experience
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-              Hear from the People Who
+              Hear from Patients & Clinicians
               <br />
-              Use Healcure
+              Using H-OS
             </h2>
           </div>
 
@@ -878,7 +880,7 @@ export default function LandingPage() {
       </section>
 
       {/* -------------------- Frequently Asked Questions (Accordion) -------------------- */}
-      <section className="py-24 sm:py-32 bg-white border-t border-slate-200/80">
+      <section id="faq" className="py-24 sm:py-32 bg-white border-t border-slate-200/80">
         <div className="max-w-3xl mx-auto px-4 sm:px-8 space-y-12">
           <div className="text-center space-y-4">
             <span className="text-xs font-semibold text-[#1A5ABA] uppercase tracking-wider">
@@ -941,33 +943,38 @@ export default function LandingPage() {
                   <Plus className="w-5 h-5 stroke-[3]" />
                 </div>
                 <span className="text-xl font-bold tracking-tight text-white">
-                  Healcure
+                  H-OS
                 </span>
               </div>
               <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
-                Connecting patients and healthcare professionals, anytime, anywhere.
+                Hospital Operating System connecting patients, doctors, inpatient ward beds, and pharmacy dispensation.
               </p>
             </div>
 
             {/* Quick Links */}
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                Quick Links
+                Departments
               </div>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
                   <a href="#services" className="hover:text-white transition-colors">
-                    Home
-                  </a>
-                </li>
-                <li>
-                  <a href="#about" className="hover:text-white transition-colors">
-                    About
+                    Cardiology
                   </a>
                 </li>
                 <li>
                   <a href="#services" className="hover:text-white transition-colors">
-                    Services
+                    Orthopedics
+                  </a>
+                </li>
+                <li>
+                  <a href="#services" className="hover:text-white transition-colors">
+                    Pediatrics
+                  </a>
+                </li>
+                <li>
+                  <a href="#services" className="hover:text-white transition-colors">
+                    General Medicine
                   </a>
                 </li>
               </ul>
@@ -991,7 +998,7 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <Link href="/staff/login" className="hover:text-white transition-colors">
-                    Staff Portal
+                    Staff & Doctor Portal
                   </Link>
                 </li>
               </ul>
@@ -1000,18 +1007,18 @@ export default function LandingPage() {
             {/* Contact */}
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                Contact
+                Emergency & Support
               </div>
               <ul className="space-y-2 text-sm text-slate-400">
-                <li>support@healcure.com</li>
+                <li>support@hos.com</li>
                 <li>+1 (415) 555-0198</li>
-                <li>123 Scheduler St, Tech City, USA</li>
+                <li>123 Healthcare Blvd, Medical District</li>
               </ul>
             </div>
           </div>
 
           <div className="pt-8 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>© 2026 Healcure. All rights reserved.</div>
+            <div>© 2026 H-OS Hospital Operating System. All rights reserved.</div>
             <div className="flex gap-6">
               <span className="hover:text-slate-400 cursor-pointer">Privacy Policy</span>
               <span className="hover:text-slate-400 cursor-pointer">Terms of Service</span>
