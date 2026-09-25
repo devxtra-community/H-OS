@@ -31,7 +31,10 @@ export const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
-});
+  lookup: (hostname: string, _options: any, callback: any) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  },
+} as any);
 
 pool.on('connect', () => {
   console.log('Staff Service DB connected');
