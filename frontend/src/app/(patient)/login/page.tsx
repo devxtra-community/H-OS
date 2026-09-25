@@ -119,18 +119,9 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => alert('Please contact the hospital reception or administration to reset your patient password.')}
-                  className="text-sm text-teal-600 hover:underline cursor-pointer"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
 
               <div className="relative mt-2">
                 <input

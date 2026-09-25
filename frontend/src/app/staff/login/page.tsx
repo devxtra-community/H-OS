@@ -116,17 +116,9 @@ export default function StaffLoginPage() {
 
             {/* Password */}
             <div>
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  className="text-sm text-teal-600 hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
 
               <div className="relative mt-2">
                 <input
