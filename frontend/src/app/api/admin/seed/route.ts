@@ -28,9 +28,14 @@ export async function POST() {
       [randomUUID(), adminPass, genMedId]
     );
 
+    const maskedDb = (process.env.DATABASE_URL || '').replace(
+      /:[^:@]+@/,
+      ':***@'
+    );
     return NextResponse.json({
       success: true,
       message: 'Admin account created: admin@gmail.com / 123',
+      db: maskedDb,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
