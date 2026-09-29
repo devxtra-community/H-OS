@@ -12,7 +12,7 @@ export async function POST() {
   });
 
   try {
-    // 1. Ensure admins and doctor_availability tables exist
+    // 1. Ensure required tables exist in destination
     await destPool.query(`
       CREATE TABLE IF NOT EXISTS admins (
         id UUID PRIMARY KEY,
@@ -36,23 +36,36 @@ export async function POST() {
       );
     `);
 
-    // 2. Sync Departments
-    const srcDepts = await srcPool.query(`SELECT * FROM departments`);
+    // 2. Department Mapping
+    const destDeptsRes = await destPool.query(
+      `SELECT id, name FROM departments`
+    );
+    const deptNameToDestId = new Map<string, string>();
+    for (const d of destDeptsRes.rows) {
+      deptNameToDestId.set(d.name.toLowerCase().trim(), d.id);
+    }
+
+    const srcDepts = await srcPool.query(`SELECT id, name FROM departments`);
+    const srcDeptIdToName = new Map<string, string>();
     for (const d of srcDepts.rows) {
-      await destPool
-        .query(
+      const cleanName = d.name.toLowerCase().trim();
+      srcDeptIdToName.set(d.id, cleanName);
+
+      if (!deptNameToDestId.has(cleanName)) {
+        await destPool.query(
           `INSERT INTO departments (id, name, created_at)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
+           VALUES ($1, $2, $3)
+           ON CONFLICT (name) DO NOTHING`,
           [d.id, d.name, d.created_at || new Date()]
-        )
-        .catch(async () => {
-          // if conflict on name, update id to match source
-          await destPool.query(
-            `UPDATE departments SET id = $1 WHERE name = $2`,
-            [d.id, d.name]
-          );
-        });
+        );
+        const refetch = await destPool.query(
+          `SELECT id FROM departments WHERE LOWER(TRIM(name)) = $1`,
+          [cleanName]
+        );
+        if (refetch.rows[0]) {
+          deptNameToDestId.set(cleanName, refetch.rows[0].id);
+        }
+      }
     }
 
     // 3. Sync Admins
@@ -69,9 +82,9 @@ export async function POST() {
           a.id,
           a.email,
           a.password_hash,
-          a.is_active,
-          a.created_at,
-          a.updated_at,
+          a.is_active ?? true,
+          a.created_at || new Date(),
+          a.updated_at || new Date(),
         ]
       );
     }
@@ -79,7 +92,10 @@ export async function POST() {
     // 4. Sync Staff
     const srcStaff = await srcPool.query(`SELECT * FROM staff`);
     for (const s of srcStaff.rows) {
-      // Ensure department exists in dest
+      const deptName = srcDeptIdToName.get(s.department_id);
+      const targetDeptId =
+        (deptName && deptNameToDestId.get(deptName)) || s.department_id;
+
       await destPool.query(
         `INSERT INTO staff (id, name, email, password_hash, department_id, role, job_title, is_active, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -96,52 +112,72 @@ export async function POST() {
           s.name,
           s.email,
           s.password_hash,
-          s.department_id,
+          targetDeptId,
           s.role,
           s.job_title,
-          s.is_active,
-          s.created_at,
-          s.updated_at,
+          s.is_active ?? true,
+          s.created_at || new Date(),
+          s.updated_at || new Date(),
         ]
       );
     }
 
     // 5. Sync Wards
+    const wardSrcToDestId = new Map<string, string>();
     const srcWards = await srcPool.query(`SELECT * FROM wards`);
     for (const w of srcWards.rows) {
-      await destPool
-        .query(
-          `INSERT INTO wards (id, name, description, created_at)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (name) DO UPDATE SET id = EXCLUDED.id, description = EXCLUDED.description`,
-          [w.id, w.name, w.description, w.created_at]
-        )
-        .catch(async () => {
+      const existing = await destPool.query(
+        `SELECT id FROM wards WHERE LOWER(TRIM(name)) = LOWER(TRIM($1))`,
+        [w.name]
+      );
+      if (existing.rows[0]) {
+        wardSrcToDestId.set(w.id, existing.rows[0].id);
+        if (w.description) {
           await destPool.query(
-            `INSERT INTO wards (id, name, description, created_at)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (id) DO NOTHING`,
-            [w.id, w.name, w.description, w.created_at]
+            `UPDATE wards SET description = $1 WHERE id = $2`,
+            [w.description, existing.rows[0].id]
           );
-        });
+        }
+      } else {
+        await destPool.query(
+          `INSERT INTO wards (id, name, description, created_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description`,
+          [w.id, w.name, w.description, w.created_at || new Date()]
+        );
+        wardSrcToDestId.set(w.id, w.id);
+      }
     }
 
     // 6. Sync Rooms
+    const roomSrcToDestId = new Map<string, string>();
     const srcRooms = await srcPool.query(`SELECT * FROM rooms`);
     for (const r of srcRooms.rows) {
-      await destPool
-        .query(
-          `INSERT INTO rooms (id, ward_id, room_number, created_at)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (ward_id, room_number) DO NOTHING`,
-          [r.id, r.ward_id, r.room_number, r.created_at]
-        )
-        .catch(() => {});
+      const destWardId = wardSrcToDestId.get(r.ward_id) || r.ward_id;
+      const existing = await destPool.query(
+        `SELECT id FROM rooms WHERE ward_id = $1 AND room_number = $2`,
+        [destWardId, r.room_number]
+      );
+      if (existing.rows[0]) {
+        roomSrcToDestId.set(r.id, existing.rows[0].id);
+      } else {
+        await destPool
+          .query(
+            `INSERT INTO rooms (id, ward_id, room_number, created_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (ward_id, room_number) DO NOTHING`,
+            [r.id, destWardId, r.room_number, r.created_at || new Date()]
+          )
+          .catch(() => {});
+        roomSrcToDestId.set(r.id, r.id);
+      }
     }
 
     // 7. Sync Beds
+    const bedSrcToDestId = new Map<string, string>();
     const srcBeds = await srcPool.query(`SELECT * FROM beds`);
     for (const b of srcBeds.rows) {
+      const destRoomId = roomSrcToDestId.get(b.room_id) || b.room_id;
       await destPool
         .query(
           `INSERT INTO beds (id, room_id, bed_number, bed_type, status, created_at)
@@ -149,14 +185,23 @@ export async function POST() {
          ON CONFLICT (room_id, bed_number) DO UPDATE SET
            status = EXCLUDED.status,
            bed_type = EXCLUDED.bed_type`,
-          [b.id, b.room_id, b.bed_number, b.bed_type, b.status, b.created_at]
+          [
+            b.id,
+            destRoomId,
+            b.bed_number,
+            b.bed_type,
+            b.status,
+            b.created_at || new Date(),
+          ]
         )
         .catch(() => {});
+      bedSrcToDestId.set(b.id, b.id);
     }
 
     // 8. Sync Bed Assignments
     const srcBedAssign = await srcPool.query(`SELECT * FROM bed_assignments`);
     for (const ba of srcBedAssign.rows) {
+      const destBedId = bedSrcToDestId.get(ba.bed_id) || ba.bed_id;
       await destPool
         .query(
           `INSERT INTO bed_assignments (id, bed_id, patient_id, admission_id, assigned_at, discharged_at)
@@ -164,7 +209,7 @@ export async function POST() {
          ON CONFLICT (id) DO NOTHING`,
           [
             ba.id,
-            ba.bed_id,
+            destBedId,
             ba.patient_id,
             ba.admission_id,
             ba.assigned_at,
@@ -175,23 +220,44 @@ export async function POST() {
     }
 
     // 9. Sync Inventory Items
+    const itemSrcToDestId = new Map<string, string>();
     const srcItems = await srcPool.query(`SELECT * FROM inventory_items`);
     for (const it of srcItems.rows) {
-      await destPool
-        .query(
-          `INSERT INTO inventory_items (id, name, category, quantity, created_at)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (name) DO UPDATE SET
-           quantity = EXCLUDED.quantity,
-           category = EXCLUDED.category`,
-          [it.id, it.name, it.category, it.quantity, it.created_at]
-        )
-        .catch(() => {});
+      const existing = await destPool.query(
+        `SELECT id FROM inventory_items WHERE LOWER(TRIM(name)) = LOWER(TRIM($1))`,
+        [it.name]
+      );
+      if (existing.rows[0]) {
+        itemSrcToDestId.set(it.id, existing.rows[0].id);
+        await destPool.query(
+          `UPDATE inventory_items SET quantity = $1, category = $2 WHERE id = $3`,
+          [it.quantity, it.category, existing.rows[0].id]
+        );
+      } else {
+        await destPool
+          .query(
+            `INSERT INTO inventory_items (id, name, category, quantity, created_at)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (name) DO UPDATE SET
+             quantity = EXCLUDED.quantity,
+             category = EXCLUDED.category`,
+            [
+              it.id,
+              it.name,
+              it.category,
+              it.quantity,
+              it.created_at || new Date(),
+            ]
+          )
+          .catch(() => {});
+        itemSrcToDestId.set(it.id, it.id);
+      }
     }
 
     // 10. Sync Inventory Transactions
     const srcTx = await srcPool.query(`SELECT * FROM inventory_transactions`);
     for (const tx of srcTx.rows) {
+      const destItemId = itemSrcToDestId.get(tx.item_id) || tx.item_id;
       await destPool
         .query(
           `INSERT INTO inventory_transactions (id, item_id, type, quantity, staff_id, patient_id, timestamp)
@@ -199,12 +265,12 @@ export async function POST() {
          ON CONFLICT (id) DO NOTHING`,
           [
             tx.id,
-            tx.item_id,
+            destItemId,
             tx.type,
             tx.quantity,
             tx.staff_id,
             tx.patient_id,
-            tx.timestamp,
+            tx.timestamp || new Date(),
           ]
         )
         .catch(() => {});
@@ -224,7 +290,7 @@ export async function POST() {
             pr.patient_name,
             pr.doctor_id,
             pr.status,
-            pr.created_at,
+            pr.created_at || new Date(),
           ]
         )
         .catch(() => {});
@@ -235,12 +301,13 @@ export async function POST() {
       `SELECT * FROM prescription_items`
     );
     for (const pi of srcPrescItems.rows) {
+      const destItemId = itemSrcToDestId.get(pi.item_id) || pi.item_id;
       await destPool
         .query(
           `INSERT INTO prescription_items (id, prescription_id, item_id, quantity, instructions)
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (id) DO NOTHING`,
-          [pi.id, pi.prescription_id, pi.item_id, pi.quantity, pi.instructions]
+          [pi.id, pi.prescription_id, destItemId, pi.quantity, pi.instructions]
         )
         .catch(() => {});
     }
@@ -250,7 +317,7 @@ export async function POST() {
       message: 'Staff and hospital infrastructure data synced successfully',
       synced: {
         departments: srcDepts.rows.length,
-        admins: srcAdmins.rows.length,
+        admins: srcAdmins.rows.map((a) => a.email),
         staff: srcStaff.rows.map((s) => ({
           email: s.email,
           name: s.name,
@@ -260,7 +327,6 @@ export async function POST() {
         rooms: srcRooms.rows.length,
         beds: srcBeds.rows.length,
         inventory_items: srcItems.rows.length,
-        prescriptions: srcPresc.rows.length,
       },
     });
   } catch (error: any) {
