@@ -69,6 +69,70 @@ export class StaffService {
     };
   }
 
+  async refreshTokens(refreshToken: string) {
+    const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as {
+      sub: string;
+      type: string;
+    };
+
+    if (payload.type !== 'REFRESH') throw new Error('Invalid token type');
+
+    const tokenHash = hashToken(refreshToken);
+    const result = await pool.query(
+      `SELECT id, staff_id, revoked, expires_at FROM staff_refresh_tokens WHERE token_hash = $1`,
+      [tokenHash]
+    );
+
+    const stored = result.rows[0];
+    if (
+      !stored ||
+      stored.revoked ||
+      new Date(stored.expires_at).getTime() < Date.now()
+    ) {
+      throw new Error('Invalid refresh token');
+    }
+
+    await pool.query(
+      `UPDATE staff_refresh_tokens SET revoked = true WHERE id = $1`,
+      [stored.id]
+    );
+
+    const staffResult = await pool.query(
+      `SELECT s.id, s.role, s.job_title, s.department_id FROM staff s WHERE s.id = $1`,
+      [stored.staff_id]
+    );
+    const staff = staffResult.rows[0];
+    if (!staff) throw new Error('Staff not found');
+
+    const newAccessToken = jwt.sign(
+      {
+        sub: staff.id,
+        type: 'STAFF',
+        role: staff.role,
+        job_title: staff.job_title,
+        department_id: staff.department_id,
+      },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { sub: staff.id, type: 'REFRESH' },
+      REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    await pool.query(
+      `INSERT INTO staff_refresh_tokens (id, staff_id, token_hash, expires_at) VALUES ($1, $2, $3, now() + interval '7 days')`,
+      [randomUUID(), staff.id, hashToken(newRefreshToken)]
+    );
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
   async getStaffById(id: string) {
     const result = await pool.query(
       `
